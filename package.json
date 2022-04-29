@@ -1,24 +1,79 @@
 {
-  "name": "turborepo-basic-shared",
-  "version": "0.0.0",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
-  },
-  "devDependencies": {
-    "prettier": "^2.5.1",
-    "turbo": "latest"
+  "name": "codesync",
+  "displayName": "codesync",
+  "description": "Synchronize your code changes across different devices",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/frixaco/codesync.git"
   },
   "engines": {
-    "npm": ">=7.0.0",
-    "node": ">=14.0.0"
+    "vscode": "^1.63.0"
   },
-  "packageManager": "pnpm@6.11.0"
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCommand:codesync.getChanges",
+    "onCommand:codesync.retrieveChanges",
+    "onView:codesync.mainView"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codesync-sidebar-view",
+          "title": "Codesync",
+          "icon": "solid/logo.svg"
+        }
+      ]
+    },
+    "views": {
+      "codesync-sidebar-view": [
+        {
+          "type": "webview",
+          "id": "codesync.mainView",
+          "name": "Codesync",
+          "icon": "solid/logo.svg",
+          "contextualTitle": "Codesync"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "codesync.getChanges",
+        "title": "CodeSync: Get current changes"
+      },
+      {
+        "command": "codesync.retrieveChanges",
+        "title": "CodeSync: Retrieve changes"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "build:base": "esbuild ./src/extension.ts --bundle --outfile=dist/main.js --external:vscode --format=cjs --platform=node",
+    "build": "npm run build:base -- --sourcemap",
+    "dev": "npm run build:base -- --sourcemap --watch",
+    "test-compile": "tsc -p ./",
+    "package": "npx vsce package"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.2.0",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "14.x",
+    "@types/vscode": "^1.63.0",
+    "@typescript-eslint/eslint-plugin": "^5.9.1",
+    "@typescript-eslint/parser": "^5.9.1",
+    "@vscode/test-electron": "^2.0.3",
+    "esbuild": "^0.14.34",
+    "eslint": "^8.6.0",
+    "glob": "^7.2.0",
+    "mocha": "^9.1.3",
+    "typescript": "^4.6.3"
+  },
+  "dependencies": {
+    "axios": "^0.26.1"
+  }
 }
