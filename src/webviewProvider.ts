@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = "codesync.mainView";
+  public static readonly viewType = "codesync.webview";
 
   private _view?: vscode.WebviewView;
 
@@ -15,15 +15,14 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
     this._view = webviewView;
 
     webviewView.webview.options = {
-      // Allow scripts in the webview
       enableScripts: true,
-
       localResourceRoots: [this._extensionUri],
     };
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
     webviewView.webview.onDidReceiveMessage((data) => {
+      console.log("onDidReceiveMessage", data);
       switch (data.type) {
         case "incoming": {
           vscode.window.activeTextEditor?.insertSnippet(
@@ -48,45 +47,39 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
-    // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "media", "main.js")
+    const mainScriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, "solid", "dist", "index.js")
+    );
+    const vendorScriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, "solid", "dist", "vendor.js")
     );
 
-    // // Do the same for the stylesheet.
-    // const styleResetUri = webview.asWebviewUri(
-    //   vscode.Uri.joinPath(this._extensionUri, "media", "reset.css")
-    // );
-    // const styleVSCodeUri = webview.asWebviewUri(
-    //   vscode.Uri.joinPath(this._extensionUri, "media", "vscode.css")
-    // );
-    const styleMainUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "media", "main.css")
+    const stylesUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, "solid", "dist", "index.css")
     );
 
-    // Use a nonce to only allow a specific script to be run.
     const nonce = getNonce();
 
     return `<!DOCTYPE html>
-  		<html lang="en">
-  		<head>
-  			<meta charset="UTF-8">
-  			<!--
-  				Use a content security policy to only allow loading images from https or from our extension directory,
-  				and only allow scripts that have a specific nonce.
-  			-->
-  			<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
-  			<meta name="viewport" content="width=device-width, initial-scale=1.0">
-  			<link href="${styleMainUri}" rel="stylesheet">
-
-  			<title>Codesync</title>
-  		</head>
-  		<body>
-        <p>Hello World</p>
-        <button>Click</button>
-  			<script nonce="${nonce}" src="${scriptUri}"></script>
-  		</body>
-  		</html>`;
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <meta name="theme-color" content="#000000" />
+          <link rel="shortcut icon" type="image/ico" href="/favicon.ico" />
+          <title>Solid App</title>
+          <script nonce=${nonce} type="module" crossorigin src="${mainScriptUri}"></script>
+          <link nonce=${nonce} rel="modulepreload" href="${vendorScriptUri}">
+          <link rel="stylesheet" href="${stylesUri}">
+        </head>
+        <body>
+          <script nonce="${nonce}">
+            const vscodeApi = acquireVsCodeApi();
+          </script>
+          <noscript>You need to enable JavaScript to run this app.</noscript>
+          <div id="root"></div>
+        </body>
+      </html>`;
   }
 }
 

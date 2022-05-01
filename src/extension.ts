@@ -1,5 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { GitExtension } from "./git";
 import axios from "axios";
@@ -27,7 +25,7 @@ async function getGitAPI() {
 let diff: string = "";
 
 export async function activate(context: vscode.ExtensionContext) {
-  console.log("Codesync started");
+  vscode.window.showInformationMessage("Codesync has started... Bruh!");
 
   const provider = new CodesyncWebviewProvider(context.extensionUri);
 
@@ -38,21 +36,8 @@ export async function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  //   context.subscriptions.push(
-  //     vscode.commands.registerCommand("calicoColors.addColor", () => {
-  //       provider.addColor();
-  //     })
-  //   );
-
-  //   context.subscriptions.push(
-  //     vscode.commands.registerCommand("calicoColors.clearColors", () => {
-  //       provider.clearColors();
-  //     })
-  //   );
-
-  let disposable1 = vscode.commands.registerCommand(
-    "codesync.getChanges",
-    async () => {
+  context.subscriptions.push(
+    vscode.commands.registerCommand("codesync.sendChanges", async () => {
       // const git = await getGitAPI();
       // const repositories = git?.repositories || [];
       // // TODO: check if multiple repos open
@@ -80,7 +65,7 @@ export async function activate(context: vscode.ExtensionContext) {
       // console.log("response", response.data);
 
       await vscode.commands.executeCommand(
-        "workbench.view.extension.codesync-sidebar-view"
+        "workbench.view.extension.codesync-sidepanel-view"
       );
       // provider.show();
 
@@ -92,14 +77,11 @@ export async function activate(context: vscode.ExtensionContext) {
         //     : "No repo or changes detected"
         // }`
       );
-    }
+    })
   );
 
-  context.subscriptions.push(disposable1);
-
-  let disposable2 = vscode.commands.registerCommand(
-    "codesync.retrieveChanges",
-    async () => {
+  context.subscriptions.push(
+    vscode.commands.registerCommand("codesync.applyChanges", async () => {
       const git = await getGitAPI();
       const repositories = git?.repositories || [];
       // TODO: check if multiple repos open
@@ -125,10 +107,8 @@ export async function activate(context: vscode.ExtensionContext) {
       await vscode.workspace.fs.delete(vscode.Uri.file(patcFilePath));
 
       vscode.window.showInformationMessage("Changes are applied");
-    }
+    })
   );
-
-  context.subscriptions.push(disposable2);
 }
 
 export function deactivate() {}

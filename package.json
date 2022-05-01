@@ -1,7 +1,8 @@
 {
   "name": "codesync",
-  "displayName": "codesync",
-  "description": "Synchronize your code changes across different devices",
+  "displayName": "Codesync",
+  "publisher": "frixaco",
+  "description": "Synchronize your code changes across your devices",
   "version": "0.0.1",
   "repository": {
     "type": "git",
@@ -13,47 +14,45 @@
   "categories": [
     "Other"
   ],
-  "main": "./dist/extension.js",
+  "main": "./dist/main.js",
   "activationEvents": [
-    "onCommand:codesync.getChanges",
-    "onCommand:codesync.retrieveChanges",
-    "onView:codesync.mainView"
+    "onView:codesync.webview",
+    "onCommand:codesync.applyChanges",
+    "onCommand:codesync.sendChanges"
   ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "codesync-sidebar-view",
+          "id": "codesync-sidepanel-view",
           "title": "Codesync",
-          "icon": "solid/logo.svg"
+          "icon": "assets/logo.svg"
         }
       ]
     },
     "views": {
-      "codesync-sidebar-view": [
+      "codesync-sidepanel-view": [
         {
           "type": "webview",
-          "id": "codesync.mainView",
-          "name": "Codesync",
-          "icon": "solid/logo.svg",
-          "contextualTitle": "Codesync"
+          "id": "codesync.webview",
+          "name": "Codesync"
         }
       ]
     },
     "commands": [
       {
-        "command": "codesync.getChanges",
-        "title": "CodeSync: Get current changes"
+        "command": "codesync.applyChanges",
+        "title": "CodeSync: Apply changes from other device(s)"
       },
       {
-        "command": "codesync.retrieveChanges",
-        "title": "CodeSync: Retrieve changes"
+        "command": "codesync.sendChanges",
+        "title": "CodeSync: Send changes to other device(s)"
       }
     ]
   },
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "build:base": "esbuild ./src/extension.ts --bundle --outfile=dist/main.js --external:vscode --format=cjs --platform=node",
+    "build:base": "rm -rf dist/ && esbuild ./src/extension.ts --bundle --outfile=dist/main.js --external:vscode --format=cjs --platform=node",
     "build": "npm run build:base -- --sourcemap",
     "dev": "npm run build:base -- --sourcemap --watch",
     "test-compile": "tsc -p ./",
