@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { GitExtension } from "./git";
 import axios from "axios";
 import { CodesyncWebviewProvider } from "./webviewProvider";
+import * as child_process from "child_process";
 
 async function getGitAPI() {
   try {
@@ -17,13 +18,6 @@ async function getGitAPI() {
   }
 }
 
-// let diff: {
-// 	staged: Change[] | undefined;
-// 	unstaged: Change[] | undefined;
-// } = { staged: undefined, unstaged: undefined };
-
-let diff: string = "";
-
 export async function activate(context: vscode.ExtensionContext) {
   vscode.window.showInformationMessage("Codesync has started... Bruh!");
 
@@ -38,45 +32,53 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("codesync.sendChanges", async () => {
-      // const git = await getGitAPI();
-      // const repositories = git?.repositories || [];
-      // // TODO: check if multiple repos open
-      // const repo = await git?.init(repositories[0].rootUri);
+      const git = await getGitAPI();
+      const repositories = git?.repositories || [];
+      // TODO: should pick correct repo if multiple are open
+      const repo = await git?.init(repositories[0].rootUri);
 
-      // // const staged = repo?.state.indexChanges || [];
-      // // const unstaged = repo?.state.workingTreeChanges || [];
-      // // const paths = [
-      // // 	...staged?.map((s) => s.uri.toString().replace("file://", "")),
-      // // 	...unstaged?.map((u) => u.uri.toString().replace("file://", "")),
-      // // ];
-      // // const repoPath = repo?.rootUri.fsPath || "";
+      let cmd_add_to_index = `git status --porcelain | sed -r 's/^.{3}//' | while read line; do git add -N $line; done`;
 
-      // try {
-      // 	await repo?.add([]);
-      // } catch (e) {
-      // 	console.error(e);
-      // }
+      const cwd = vscode.workspace.workspaceFolders![0].uri.fsPath;
+      console.log(cwd);
+      child_process.exec(
+        cmd_add_to_index,
+        {
+          cwd,
+        },
+        (error, stdout, stderr) => {
+          // TODO: move `| sed -r 's/^.{3}//' | while read line; do git add -N $line; done`
+          // to here, to remove dependency on bash commands
 
-      // diff = (await repo?.diff(true)) || "";
+          if (error) {
+            vscode.window.showErrorMessage(
+              "Failed to create patch",
+              error.message
+            );
+          } else {
+            vscode.window.showInformationMessage(
+              "Patch files created successfully"
+            );
+          }
+        }
+      );
+
+      const diff = {
+        unstaged: "",
+        staged: "",
+      };
+      diff.staged = (await repo?.diff(true)) || "";
+      diff.unstaged = (await repo?.diff()) || "";
+
+      console.log("STAGE", diff.staged);
+      console.log("UNSTAGE", diff.unstaged);
 
       // const response = await axios.post("http://localhost:3000", {
-      // 	diff: diff,
+      //   diff: diff,
       // });
       // console.log("response", response.data);
 
-      await vscode.commands.executeCommand(
-        "workbench.view.extension.codesync-sidepanel-view"
-      );
-      // provider.show();
-
-      vscode.window.showInformationMessage(
-        `finished`
-        // `${
-        //   repositories.length && diff.length
-        //     ? "Changes saved'"
-        //     : "No repo or changes detected"
-        // }`
-      );
+      vscode.window.showInformationMessage("Changes saved");
     })
   );
 
