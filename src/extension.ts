@@ -73,12 +73,14 @@ export async function activate(context: vscode.ExtensionContext) {
       console.log("STAGE", diff.staged);
       console.log("UNSTAGE", diff.unstaged);
 
-      // const response = await axios.post("http://localhost:3000", {
-      //   diff: diff,
-      // });
-      // console.log("response", response.data);
-
-      vscode.window.showInformationMessage("Changes saved");
+      const response = await axios.post("http://localhost:3001", {
+        diff,
+      });
+      if (response.data.success) {
+        vscode.window.showInformationMessage("Changes saved");
+      } else {
+        vscode.window.showErrorMessage("Error sending and saving message");
+      }
     })
   );
 
@@ -90,25 +92,31 @@ export async function activate(context: vscode.ExtensionContext) {
       const repo = await git?.init(repositories[0].rootUri);
 
       const currentDir = vscode.workspace.workspaceFolders || [];
-      const patcFilePath = `${currentDir[0].uri.fsPath}/temp.patch`;
 
       try {
-        const retrievedChanges = await axios.get("http://localhost:3000");
+        const retrievedChanges = await axios.get("http://localhost:3001");
         const diff = retrievedChanges.data.diff;
 
+        const stagedPatch = `${currentDir[0].uri.fsPath}/staged.patch`;
         await vscode.workspace.fs.writeFile(
-          vscode.Uri.file(patcFilePath),
-          Buffer.from(diff)
+          vscode.Uri.file(stagedPatch),
+          Buffer.from(diff.staged)
+        );
+
+        const unstagedPatch = `${currentDir[0].uri.fsPath}/unstaged.patch`;
+        await vscode.workspace.fs.writeFile(
+          vscode.Uri.file(unstagedPatch),
+          Buffer.from(diff.unstaged)
         );
       } catch (error) {
         console.error(error);
       }
 
-      repo?.apply(patcFilePath);
+      // repo?.apply(patcFilePath);
 
-      await vscode.workspace.fs.delete(vscode.Uri.file(patcFilePath));
+      // await vscode.workspace.fs.delete(vscode.Uri.file(patcFilePath));
 
-      vscode.window.showInformationMessage("Changes are applied");
+      vscode.window.showInformationMessage("Patch file created");
     })
   );
 }

@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
 
+const PORT = process.env.PORT || 3001;
+
 const app = express();
 
 app.use(express.json());
@@ -16,14 +18,16 @@ async function main() {
 
 app.post(`/`, async (req, res) => {
   data = req.body;
-  res.json({ msg: "SUCCESS" });
+  console.log("server: save data=", Object.keys(data.diff));
+  res.json({ success: true });
 });
 
 app.get(`/`, async (req, res) => {
+  console.log("server: get data=", Object.keys(data.diff));
   res.json(data);
 });
 
-const server = app.listen(3000, () => {
+const server = app.listen(PORT, () => {
   main()
     .catch((e) => {
       throw e;
@@ -32,5 +36,5 @@ const server = app.listen(3000, () => {
       await prisma.$disconnect();
     });
 
-  console.log(`🚀 Server ready at: http://localhost:3000`);
+  console.log(`🚀 Server ready at: http://localhost:${PORT}`);
 });
