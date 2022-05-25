@@ -10,3 +10,4 @@ tsconfig.lsif.json
 *.db
 .vscode/
 .env
+.pnpm-debug.log
