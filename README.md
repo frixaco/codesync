@@ -1,29 +1,42 @@
 # codesync
 
-Synchronize your changes across any number of devices. No need to commit, stash, copy-paste your changes when switching between devices (laptop, PC, tablet, etc.)
+Synchronize your changes across devices. No need to commit, stash, copy-paste your changes when switching between devices (laptop, PC, tablet, etc.).
 
-Goal: Auto synchronize all of my code changes to speed up switching between my laptop and PC.
+Currently, I work both on my laptop and PC and regularly switch between them (switch to laptop at University or just want to work from my couch, switch to PC when doing some heavy testing/development. I couldn't find any quick and easy way to switch between devices without losing any progress (transferring edited/created/deleted files to other device) and it's pretty annoying to:
+`stash the changes using a git command => save to file as a patch => send to other device using some service (notion) => download, move to project folder => apply the patch by running a git command`.
 
-Requirement for the extension to work:
+So I deciced to make this extension which hopefully solve this problem of mine.
 
-- Same branch
-- Same commit
+Requirement for the synchronization to work:
+
+
 
 (both because of how Git internally works, e.g. `git apply` will fail if indexes are different)
 
 TODO:
-
-- [ ] Synchronization should be separate for each project
-- [ ] Each user can have multiple projects
-- [ ] Synchronization can be done automatically every N seconds (auto) or manually (pressing buttons)
-- [ ] Each user must have an account (auto-generated or linked via GitHub)
-- [ ] User can confirm before applying new changes (confirm -> applied, cancel -> delete the changes)
-- [ ] User can pause synchronization
-- [ ] Synchronize staged, unstaged, tracked, untracked files
+- [x] (diff) Generate diff from staged, unstaged, tracked and untracked files
+- [ ] (auth) Add user authorization and authentication
+- [ ] (ext-ui) Implement extension UI for user login/registration
+- [ ] (ext-ui) Implement extension UI to allow manual two-way synchronization
+- [ ] (server) Allow users to create and manage projects in backend
+- [ ] (server) Implement synchronization for each projects in backend
+- [ ] (ext-ui) Implement extension UI for multiple projects
+- [ ] (market) Publish
+- [ ] ...
 
 ## Features
+- [x] Diff for staged, unstaged, tracked and untracked files
+- [ ] Accounts
+- [ ] Multiple projects
+- [ ] Manual two-way synchronization
+- [ ] Auto synchronization
 
 ## Requirements
+- Following should be same (Git won't allow otherwise):
+  - project
+  - branch
+  - commit
+- VS Code: 1.63.0 or above (TODO: Lower)
 
 ## Extension Settings
 
