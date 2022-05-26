@@ -11,3 +11,4 @@ tsconfig.lsif.json
 .vscode/
 .env
 .pnpm-debug.log
+.eslintcache

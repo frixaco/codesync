@@ -1,12 +1,15 @@
-import { Query, Send } from 'express-serve-static-core';
+import { Query, Send } from "express-serve-static-core";
 
-type Token = { token: string, expiresIn: number, expirationDateValue: number }
+type Token = { token: string; expiresIn: number; expirationDateValue: number };
 
-interface TypedRequest<U, T extends Query = {}> extends Express.Request {
-    body: U,
-    query: T
+interface TypedRequest<
+    U = Record<string, never>,
+    T extends Query = Record<string, never>
+> extends Express.Request {
+    body: U;
+    query: T;
 }
 
-interface TypedResponse<T> extends Express.Response {
-   json: Send<T, this>;
+interface TypedResponse<T = Record<string, never>> extends Express.Response {
+    json: Send<T, this>;
 }

@@ -1,75 +1,85 @@
 import * as vscode from "vscode";
 
 export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = "codesync.webview";
+    public static readonly viewType = "codesync.webview";
 
-  private _view?: vscode.WebviewView;
+    private _view?: vscode.WebviewView;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+    constructor(private readonly _extensionUri: vscode.Uri) {}
 
-  public resolveWebviewView(
-    webviewView: vscode.WebviewView,
-    context: vscode.WebviewViewResolveContext,
-    _token: vscode.CancellationToken
-  ) {
-    this._view = webviewView;
+    public resolveWebviewView(
+        webviewView: vscode.WebviewView,
+        context: vscode.WebviewViewResolveContext,
+        _token: vscode.CancellationToken
+    ) {
+        this._view = webviewView;
 
-    webviewView.webview.options = {
-      enableScripts: true,
-      localResourceRoots: [this._extensionUri],
-    };
+        webviewView.webview.options = {
+            enableScripts: true,
+            localResourceRoots: [this._extensionUri],
+        };
 
-    webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+        webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-    webviewView.webview.onDidReceiveMessage((data) => {
-      console.log("onDidReceiveMessage", data);
+        webviewView.webview.onDidReceiveMessage((data) => {
+            console.log("onDidReceiveMessage", data);
 
-      switch (data.type) {
-        case "send": {
-          console.log("send");
-          vscode.commands.executeCommand("codesync.sendChanges", {
-            deviceId: data.deviceId,
-          });
-          // vscode.window.activeTextEditor?.insertSnippet(
-          //   new vscode.SnippetString(`#${data.value}`)
-          // );
-          break;
-        }
-        case "receive": {
-          console.log("receive");
-          vscode.commands.executeCommand("codesync.applyChanges", {
-            deviceId: data.deviceId,
-          });
-          // vscode.window.activeTextEditor?.insertSnippet(
-          //   new vscode.SnippetString(`#${data.value}`)
-          // );
-          break;
-        }
-      }
-    });
-  }
-
-  public show() {
-    if (this._view) {
-      this._view.show?.(true);
+            switch (data.type) {
+                case "send": {
+                    console.log("send");
+                    vscode.commands.executeCommand("codesync.sendChanges", {
+                        deviceId: data.deviceId,
+                    });
+                    // vscode.window.activeTextEditor?.insertSnippet(
+                    //   new vscode.SnippetString(`#${data.value}`)
+                    // );
+                    break;
+                }
+                case "receive": {
+                    console.log("receive");
+                    vscode.commands.executeCommand("codesync.applyChanges", {
+                        deviceId: data.deviceId,
+                    });
+                    // vscode.window.activeTextEditor?.insertSnippet(
+                    //   new vscode.SnippetString(`#${data.value}`)
+                    // );
+                    break;
+                }
+            }
+        });
     }
-  }
 
-  private _getHtmlForWebview(webview: vscode.Webview) {
-    const mainScriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "solid", "dist", "index.js")
-    );
-    const vendorScriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "solid", "dist", "vendor.js")
-    );
+    public show() {
+        if (this._view) {
+            this._view.show?.(true);
+        }
+    }
 
-    const stylesUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "solid", "dist", "index.css")
-    );
+    private _getHtmlForWebview(webview: vscode.Webview) {
+        const mainScriptUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, "solid", "dist", "index.js")
+        );
+        const vendorScriptUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(
+                this._extensionUri,
+                "solid",
+                "dist",
+                "vendor.js"
+            )
+        );
 
-    const nonce = getNonce();
+        const stylesUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(
+                this._extensionUri,
+                "solid",
+                "dist",
+                "index.css"
+            )
+        );
 
-    return `<!DOCTYPE html>
+        const nonce = getNonce();
+
+        return `<!DOCTYPE html>
       <html lang="en">
         <head>
           <meta charset="utf-8" />
@@ -89,15 +99,15 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
           <div id="root"></div>
         </body>
       </html>`;
-  }
+    }
 }
 
 function getNonce() {
-  let text = "";
-  const possible =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < 32; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
+    let text = "";
+    const possible =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for (let i = 0; i < 32; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
 }
