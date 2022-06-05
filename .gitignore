@@ -12,3 +12,5 @@ tsconfig.lsif.json
 .env
 .pnpm-debug.log
 .eslintcache
+yarn.lock
+package-lock.json
