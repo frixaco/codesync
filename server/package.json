@@ -3,7 +3,8 @@
         "build:base": "esbuild ./src/index.ts --bundle --outfile=dist/index.js --format=cjs --platform=node",
         "build": "npm run build:base -- --sourcemap",
         "build:watch": "npm run build:base -- --sourcemap --watch",
-        "dev": "ts-node ./src/index.ts"
+        "dev": "ts-node ./src/index.ts",
+        "db:gen": "prisma generate"
     },
     "dependencies": {
         "@prisma/client": "^3.14.0",

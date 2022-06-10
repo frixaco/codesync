@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-const db = new PrismaClient();
+const prisma = new PrismaClient();
 
 /**
  * Exclude keys from user
@@ -20,4 +20,4 @@ export function exclude<User, Key extends keyof User>(
     return user;
 }
 
-export default db;
+export default prisma;
