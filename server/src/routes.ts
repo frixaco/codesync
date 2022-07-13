@@ -2,7 +2,35 @@ import { FastifyInstance } from "fastify";
 import prisma from "./db";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
+let dbDiff = "";
+
 export default async function routesPlugin(fastify: FastifyInstance) {
+    fastify.route({
+        method: "POST",
+        url: "/changes",
+        handler: async (request, reply) => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            const { diff, deviceId, projectId } = request.body;
+
+            dbDiff = diff;
+
+            reply.send({ success: true });
+        },
+    });
+
+    fastify.route({
+        method: "POST",
+        url: "/change",
+        handler: async (request, reply) => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            const { deviceId, projectId } = request.body;
+
+            reply.send({ success: true, diff: dbDiff });
+        },
+    });
+
     fastify.route({
         method: "POST",
         url: "/refresh",

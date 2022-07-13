@@ -65,22 +65,20 @@ export const [projects, { mutate: mutateProjects, refetch: refetchProjects }] =
         return projectsData;
     });
 
-/**
- * Send changes to the server.
- * They can be accessed from any connected device by pressing 'Receive'
- * button of the device that they were sent from (nice english i got there)
- */
-const onSend = () => {
-    console.log("onSend");
+const onSend = ({
+    deviceId,
+    projectId,
+}: {
+    deviceId: string;
+    projectId: string;
+}) => {
     vscodeApi.postMessage({
         type: "send",
+        deviceId,
+        projectId,
     });
 };
 
-/**
- * Each device in devices list have a 'Receive' button
- * which allows to download last changes from that device and apply them
- */
 const onReceive = ({
     deviceId,
     projectId,
@@ -88,7 +86,6 @@ const onReceive = ({
     deviceId: string;
     projectId: string;
 }) => {
-    console.log("onReceive");
     vscodeApi.postMessage({
         type: "receive",
         deviceId,
@@ -140,7 +137,14 @@ function App() {
                             <div class="flex flex-col mt-3 justify-center items-stretch gap-2">
                                 <button
                                     class={`bg-vsgreen ${btn} py-2 px-6`}
-                                    onClick={onSend}
+                                    onClick={() =>
+                                        onSend({
+                                            deviceId: targetDevice()
+                                                ?.id as string,
+                                            projectId: targetProject()
+                                                ?.id as string,
+                                        })
+                                    }
                                 >
                                     PUSH CHANGES TO SERVER
                                 </button>
