@@ -110,12 +110,12 @@ function App() {
 
     return (
         <div>
-            <div class="flex-column my-1">
+            <div class="flex flex-col my-1">
                 <div>
                     <>
                         <div>
                             {targetDevice() && (
-                                <div class="flex justify-between mt-2 align-mid">
+                                <div class="flex justify-between mt-2">
                                     <span class="font-bold">
                                         Device:{" "}
                                         {`${targetDevice()?.name} (${
@@ -125,7 +125,7 @@ function App() {
                                 </div>
                             )}
                             {targetProject() && (
-                                <div class="flex justify-between mt-2 align-mid">
+                                <div class="flex justify-between mt-2">
                                     <span class="font-bold">
                                         Project:{" "}
                                         {`${targetProject()?.name} (${
@@ -137,12 +137,12 @@ function App() {
                         </div>
 
                         {targetDevice() && targetProject() && (
-                            <div class="flex mt-3 justify-between">
+                            <div class="flex flex-col mt-3 justify-center items-stretch gap-2">
                                 <button
                                     class={`bg-vsgreen ${btn} py-2 px-6`}
                                     onClick={onSend}
                                 >
-                                    SEND
+                                    PUSH CHANGES TO SERVER
                                 </button>
 
                                 <button
@@ -157,7 +157,7 @@ function App() {
                                         })
                                     }
                                 >
-                                    RECEIVE
+                                    FETCH CHANGES AND APPLY
                                 </button>
                             </div>
                         )}
@@ -193,7 +193,7 @@ function Projects({
         <div class="py-2">
             <p class="my-0">Choose a device</p>
 
-            <div class="flex-column mt-2">
+            <div class="flex flex-col mt-2">
                 <For each={projects()} fallback={<span>Empty</span>}>
                     {(project) => (
                         <div class="flex justify-between my-1">
@@ -231,7 +231,7 @@ function Devices({ onChoose }: { onChoose: (device: Device) => void }) {
         <div class="py-2">
             <p class="my-0">Choose a device</p>
 
-            <div class="flex-column mt-2">
+            <div class="flex flex-col mt-2">
                 <For each={devices()} fallback={<span>Empty</span>}>
                     {(device) => (
                         <div class="flex justify-between my-1">
