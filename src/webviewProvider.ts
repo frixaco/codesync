@@ -10,7 +10,7 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
         context: vscode.WebviewViewResolveContext,
-        _token: vscode.CancellationToken
+        token: vscode.CancellationToken
     ) {
         this._view = webviewView;
 

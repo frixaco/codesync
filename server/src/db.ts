@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const prismaDb = new PrismaClient();
 
 /**
  * Exclude keys from user
@@ -10,14 +10,14 @@ const prisma = new PrismaClient();
  * const userWithoutPassword = exclude(user, 'password')
  * ```
  */
-export function exclude<User, Key extends keyof User>(
-    user: User,
+export function exclude<T, Key extends keyof T>(
+    obj: T,
     ...keys: Key[]
-): Omit<User, Key> {
+): Omit<T, Key> {
     for (const key of keys) {
-        delete user[key];
+        delete obj[key];
     }
-    return user;
+    return obj;
 }
 
-export default prisma;
+export default prismaDb;
