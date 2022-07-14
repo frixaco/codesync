@@ -1,184 +1,129 @@
-import { FastifyInstance } from "fastify";
-import prisma from "./db";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import { FastifyInstance, FastifyPluginOptions } from "fastify";
+import fp from "fastify-plugin";
+import prismaDb from "./db";
 
-let dbDiff = "";
+async function router(fastify: FastifyInstance, options: FastifyPluginOptions) {
+    /**
+     * Create or update project
+     */
+    fastify.post("/project", {}, async (request, reply) => {
+        console.log("request.body", request.body, typeof request.body);
+        const { projectId, name, ownerId } = request.body as any;
 
-export default async function routesPlugin(fastify: FastifyInstance) {
-    fastify.route({
-        method: "POST",
-        url: "/changes",
-        handler: async (request, reply) => {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            const { diff, deviceId, projectId } = request.body;
+        if (projectId) {
+            await prismaDb.project.update({
+                where: {
+                    id: projectId,
+                },
+                data: {
+                    name,
+                    // owner: {
+                    //     connect: {
+                    //         id: ownerId,
+                    //     },
+                    // },
+                },
+            });
+        } else {
+            console.log("creating project", name);
+            const result = await prismaDb.project.create({
+                data: {
+                    name,
+                    // owner: {
+                    //     connect: {
+                    //         id: ownerId,
+                    //     },
+                    // },
+                },
+            });
+            console.log("result", result);
+        }
 
-            dbDiff = diff;
-
-            reply.send({ success: true });
-        },
+        return { success: true };
     });
 
-    fastify.route({
-        method: "POST",
-        url: "/change",
-        handler: async (request, reply) => {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            const { deviceId, projectId } = request.body;
+    fastify.get("/project", {}, async (request, reply) => {
+        const { ownerId } = request.query as any;
+        const projects = await prismaDb.project.findMany();
+        console.log("projects", projects);
 
-            reply.send({ success: true, diff: dbDiff });
-        },
+        // const user  = await prismaDb.user.findUnique({
+        //     where: {
+        //         id: Number(ownerId),
+        //     },
+        //     include: {
+        //         projects: true
+        //     }
+        // })
+        // const projects = user.projects
+
+        return { success: true, projects };
     });
 
-    fastify.route({
-        method: "POST",
-        url: "/refresh",
-        handler: async (request, reply) => {
-            try {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                const { refreshToken } = request.body;
-                const payload = jwt.verify(
-                    refreshToken,
-                    process.env.JWT_REFRESH_SECRET as string,
-                    {}
-                ) as JwtPayload;
+    /**
+     * Create diff for project
+     */
+    fastify.post("/change", {}, async (request, reply) => {
+        const { diff, projectId, authorId } = request.body as any;
 
-                const user = await prisma.user.findUnique({
-                    where: {
-                        email: payload.email,
+        const project = await prismaDb.project.findUnique({
+            where: {
+                id: projectId,
+            },
+        });
+        if (!project) {
+            reply.send({ success: false });
+            return;
+        }
+
+        // const author = await prismaDb.user.findUnique({
+        //     where: {
+        //         id: authorId,
+        //     },
+        // });
+        // if (!author) {
+        //     reply.send({ success: false });
+        //     return;
+        // }
+
+        await prismaDb.change.create({
+            data: {
+                diff,
+                // author: {
+                //     connect: {
+                //         id: authorId,
+                //     },
+                // },
+                project: {
+                    connect: {
+                        id: project.id,
                     },
-                });
+                },
+            },
+        });
 
-                const dbRefreshToken = jwt.verify(
-                    user?.refreshToken || "",
-                    process.env.JWT_REFRESH_SECRET as string,
-                    {}
-                ) as JwtPayload;
-
-                if (!user || payload.email !== dbRefreshToken.email) {
-                    return {
-                        status: 401,
-                        errorMessage: "Invalid refresh token",
-                    };
-                }
-
-                const newAccessToken = jwt.sign(
-                    { email: user.email },
-                    process.env.JWT_ACCESS_SECRET as string,
-                    {
-                        expiresIn: "30m",
-                    }
-                );
-
-                return {
-                    newAccessToken,
-                    refreshToken,
-                };
-            } catch (err) {
-                return {
-                    status: 500,
-                    errorMessage: "Refresh token error",
-                };
-            }
-        },
+        return { success: true };
     });
 
-    fastify.route({
-        method: "POST",
-        url: "/login",
-        handler: async (request, reply) => {
-            try {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                const { email, password } = request.body;
+    /**
+     * Get diff for a project
+     */
+    fastify.get("/change", {}, async (request, reply) => {
+        const { projectId } = request.query as any;
 
-                const user = await prisma.user.findUnique({
-                    where: {
-                        email,
-                    },
-                });
+        const change = await prismaDb.change.findUnique({
+            where: {
+                projectId: Number(projectId),
+            },
+        });
 
-                if (!user || password !== user?.password) {
-                    return {
-                        status: 401,
-                        errorMessage: "Invalid email or password",
-                    };
-                }
+        if (!change) {
+            reply.send({ success: false });
+            return;
+        }
 
-                const accessToken = jwt.sign(
-                    { email: user.email },
-                    process.env.JWT_ACCESS_SECRET as string,
-                    { expiresIn: "30m" }
-                );
-                const refreshToken = jwt.sign(
-                    { email },
-                    process.env.JWT_REFRESH_SECRET as string,
-                    {
-                        expiresIn: "15d",
-                    }
-                );
-
-                return {
-                    accessToken,
-                    refreshToken,
-                };
-            } catch (error) {
-                return { status: 500, errorMessage: "Login error" };
-            }
-        },
-    });
-
-    fastify.route({
-        method: "POST",
-        url: "/signup",
-        handler: async (request, reply) => {
-            try {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                const { email, password } = request.body;
-
-                const isUserExists = await prisma.user.findUnique({
-                    where: {
-                        email,
-                    },
-                });
-                if (isUserExists) {
-                    return {
-                        errorMessage: "User already exists",
-                    };
-                }
-
-                await prisma.user.create({
-                    data: {
-                        email,
-                        password,
-                    },
-                });
-
-                const accessToken = jwt.sign(
-                    { email },
-                    process.env.JWT_ACCESS_SECRET as string,
-                    {
-                        expiresIn: "30m",
-                    }
-                );
-                const refreshToken = jwt.sign(
-                    { email },
-                    process.env.JWT_REFRESH_SECRET as string,
-                    {
-                        expiresIn: "15d",
-                    }
-                );
-
-                return {
-                    accessToken,
-                    refreshToken,
-                };
-            } catch (error) {
-                return { status: 500, message: `Signup user` };
-            }
-        },
+        return { success: true, diff: change.diff };
     });
 }
+
+export default fp(router);
