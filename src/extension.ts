@@ -19,7 +19,7 @@ async function getGitAPI() {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-    vscode.window.showInformationMessage("Codesync has started... Bruh!");
+    vscode.window.showInformationMessage("Codesync has started");
 
     const provider = new CodesyncWebviewProvider(context.extensionUri);
 
@@ -33,7 +33,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand(
             "codesync.sendChanges",
-            async ({ deviceId, projectId }) => {
+            async ({ projectId }) => {
                 const git = await getGitAPI();
                 const repositories = git?.repositories || [];
                 // TODO: should pick correct repo if multiple are open
@@ -66,10 +66,9 @@ export async function activate(context: vscode.ExtensionContext) {
                 diff.unstaged = (await repo?.diff()) || "";
 
                 const response = await axios.post(
-                    "http://localhost:3001/changes",
+                    "http://localhost:3001/change",
                     {
                         diff: JSON.stringify(diff),
-                        deviceId,
                         projectId,
                     }
                 );
@@ -88,7 +87,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand(
             "codesync.applyChanges",
-            async ({ deviceId, projectId }) => {
+            async ({ projectId }) => {
                 const git = await getGitAPI();
                 const repositories = git?.repositories || [];
                 // TODO: should pick correct repo if multiple are open
@@ -99,11 +98,12 @@ export async function activate(context: vscode.ExtensionContext) {
                 const unstagedPatch = `${currentDir[0].uri.fsPath}/unstaged.patch`;
 
                 try {
-                    const retrievedChanges = await axios.post(
+                    const retrievedChanges = await axios.get(
                         "http://localhost:3001/change",
                         {
-                            deviceId,
-                            projectId,
+                            params: {
+                                projectId,
+                            },
                         }
                     );
                     if (!retrievedChanges.data.success) {

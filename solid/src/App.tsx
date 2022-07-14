@@ -1,186 +1,104 @@
 import { createResource, createSignal, For } from "solid-js";
 import "uno.css";
-
-interface Device {
-    id: string;
-    name: string;
-    userId: string;
-    status: "ONLINE" | "OFFLINE";
-}
-
 interface Project {
     id: string;
     name: string;
+    change?: Change;
 }
 
-const devicesData: Device[] = [
-    {
-        name: "Macbook Air M1",
-        status: "ONLINE",
-        id: "123asd",
-        userId: "rustam",
-    },
-    {
-        name: "FRIXACOPC",
-        status: "OFFLINE",
-        id: "1a2s3d",
-        userId: "rustam",
-    },
-    {
-        name: "Archlinux VM",
-        status: "ONLINE",
-        id: "12as3d",
-        userId: "alex",
-    },
-];
-
-export const [devices, { mutate: mutateDevices, refetch: refetchDevices }] =
-    createResource<Device[]>(async () => {
-        // const response = await fetch("http://localhost:3001/devices", {
-        //     method: "GET",
-        // });
-        // const connectedDevices = await response.json();
-        // return connectedDevices;
-        return devicesData;
-    });
-
-const projectsData: Project[] = [
-    {
-        id: "123asd",
-        name: "PostNChat",
-    },
-    {
-        id: "1a2s3d",
-        name: "PM-fr",
-    },
-];
+interface Change {
+    id: number;
+    diff: string;
+    project: Project;
+    projectId: number;
+}
 
 export const [projects, { mutate: mutateProjects, refetch: refetchProjects }] =
     createResource<Project[]>(async () => {
-        // const response = await fetch("http://localhost:3001/projects", {
-        //     method: "GET",
-        // });
-        // const connectedDevices = await response.json();
-        // return connectedDevices;
-        return projectsData;
+        const response = await fetch("http://localhost:3001/project", {
+            method: "GET",
+        });
+        return (await response.json()).projects;
     });
 
-const onSend = ({
-    deviceId,
-    projectId,
-}: {
-    deviceId: string;
-    projectId: string;
-}) => {
+const onSend = ({ projectId }: { projectId: string }) => {
     vscodeApi.postMessage({
         type: "send",
-        deviceId,
         projectId,
     });
 };
 
-const onReceive = ({
-    deviceId,
-    projectId,
-}: {
-    deviceId: string;
-    projectId: string;
-}) => {
+const onReceive = ({ projectId }: { projectId: string }) => {
     vscodeApi.postMessage({
         type: "receive",
-        deviceId,
         projectId,
     });
+};
+
+const createProject = async ({ name }: { name: string }): Promise<boolean> => {
+    const reponse = await fetch("http://localhost:3001/project", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            name,
+        }),
+    });
+    return (await reponse.json()).success;
 };
 
 const [targetProject, setTargetProject] = createSignal<Project>();
-const [targetDevice, setTargetDevice] = createSignal<Device>();
 
 function App() {
-    const onChooseDevice = (chosenDevice: Device) => {
-        setTargetDevice(chosenDevice);
-    };
-
     const onChooseProject = (chosenProject: Project) => {
         setTargetProject(chosenProject);
     };
 
     return (
-        <div>
-            <div class="flex flex-col my-1">
+        <div class="flex flex-col my-1">
+            {targetProject() && (
                 <div>
-                    <>
-                        <div>
-                            {targetDevice() && (
-                                <div class="flex justify-between mt-2">
-                                    <span class="font-bold">
-                                        Device:{" "}
-                                        {`${targetDevice()?.name} (${
-                                            targetDevice()?.id
-                                        })`}
-                                    </span>
-                                </div>
-                            )}
-                            {targetProject() && (
-                                <div class="flex justify-between mt-2">
-                                    <span class="font-bold">
-                                        Project:{" "}
-                                        {`${targetProject()?.name} (${
-                                            targetProject()?.id
-                                        })`}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
+                    <div class="flex justify-between mt-2">
+                        <span class="font-bold">
+                            Project:{" "}
+                            {`${targetProject()?.name} (${
+                                targetProject()?.id
+                            })`}
+                        </span>
+                    </div>
 
-                        {targetDevice() && targetProject() && (
-                            <div class="flex flex-col mt-3 justify-center items-stretch gap-2">
-                                <button
-                                    class={`bg-vsgreen ${btn} py-2 px-6`}
-                                    onClick={() =>
-                                        onSend({
-                                            deviceId: targetDevice()
-                                                ?.id as string,
-                                            projectId: targetProject()
-                                                ?.id as string,
-                                        })
-                                    }
-                                >
-                                    PUSH CHANGES TO SERVER
-                                </button>
+                    <div class="flex flex-col mt-3 justify-center items-stretch gap-2">
+                        <button
+                            class={`bg-vsgreen ${btn} py-2 px-6`}
+                            onClick={() =>
+                                onSend({
+                                    projectId: targetProject()?.id as string,
+                                })
+                            }
+                        >
+                            PUSH CHANGES TO SERVER
+                        </button>
 
-                                <button
-                                    title="Fetch changes for this "
-                                    class={`bg-vsblue ${btn} py-2 px-4`}
-                                    onClick={() =>
-                                        onReceive({
-                                            projectId: targetProject()
-                                                ?.id as string,
-                                            deviceId: targetDevice()
-                                                ?.id as string,
-                                        })
-                                    }
-                                >
-                                    FETCH CHANGES AND APPLY
-                                </button>
-                            </div>
-                        )}
-                    </>
+                        <button
+                            title="Fetch changes for this "
+                            class={`bg-vsblue ${btn} py-2 px-4`}
+                            onClick={() =>
+                                onReceive({
+                                    projectId: targetProject()?.id as string,
+                                })
+                            }
+                        >
+                            FETCH CHANGES AND APPLY
+                        </button>
+                    </div>
                 </div>
+            )}
 
-                <div class="mt-4">
-                    <p class="font-bold my-0">DEVICES</p>
+            <div>
+                <p class="font-bold mt-4 mb-0">PROJECTS</p>
 
-                    <Devices onChoose={onChooseDevice} />
-                </div>
-
-                <hr />
-
-                <div>
-                    <p class="font-bold my-0">PROJECTS</p>
-
-                    <Projects onChoose={onChooseProject} />
-                </div>
+                <Projects onChoose={onChooseProject} />
             </div>
         </div>
     );
@@ -193,9 +111,27 @@ function Projects({
 }: {
     onChoose: (chosenProject: Project) => void;
 }) {
+    const [projectName, setProjectName] = createSignal("");
+
+    const handleProjectCreate = async () => {
+        await createProject({ name: projectName() });
+        refetchProjects();
+        setProjectName("");
+    };
+
     return (
         <div class="py-2">
-            <p class="my-0">Choose a device</p>
+            <div>
+                <label for="projectName">
+                    <input
+                        onInput={(e) => setProjectName(e.currentTarget.value)}
+                        type="text"
+                    />
+                </label>
+                <button onClick={handleProjectCreate}>Create project</button>
+            </div>
+
+            <p class="my-0">Choose a project</p>
 
             <div class="flex flex-col mt-2">
                 <For each={projects()} fallback={<span>Empty</span>}>
@@ -210,6 +146,7 @@ function Projects({
                             >
                                 {`${project.name} (${project.id}`})
                             </span>
+
                             <div class="flex">
                                 <button
                                     class={`mr-1 bg-vsgreen ${btn} ${
@@ -218,44 +155,6 @@ function Projects({
                                             : ""
                                     }`}
                                     onClick={() => onChoose(project)}
-                                >
-                                    Choose
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </For>
-            </div>
-        </div>
-    );
-}
-
-function Devices({ onChoose }: { onChoose: (device: Device) => void }) {
-    return (
-        <div class="py-2">
-            <p class="my-0">Choose a device</p>
-
-            <div class="flex flex-col mt-2">
-                <For each={devices()} fallback={<span>Empty</span>}>
-                    {(device) => (
-                        <div class="flex justify-between my-1">
-                            <span
-                                class={
-                                    device.id === targetDevice()?.id
-                                        ? "font-bold"
-                                        : ""
-                                }
-                            >
-                                {`${device.name} (${device.id}`})
-                            </span>
-                            <div class="flex">
-                                <button
-                                    class={`mr-1 bg-vsgreen ${btn} ${
-                                        device.id === targetDevice()?.id
-                                            ? "op-80"
-                                            : ""
-                                    }`}
-                                    onClick={() => onChoose(device)}
                                 >
                                     Choose
                                 </button>

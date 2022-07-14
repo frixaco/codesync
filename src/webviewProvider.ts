@@ -25,22 +25,14 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
             switch (data.type) {
                 case "send": {
                     vscode.commands.executeCommand("codesync.sendChanges", {
-                        deviceId: data.deviceId,
                         projectId: data.projectId,
                     });
-                    // vscode.window.activeTextEditor?.insertSnippet(
-                    //   new vscode.SnippetString(`#${data.value}`)
-                    // );
                     break;
                 }
                 case "receive": {
                     vscode.commands.executeCommand("codesync.applyChanges", {
-                        deviceId: data.deviceId,
                         projectId: data.projectId,
                     });
-                    // vscode.window.activeTextEditor?.insertSnippet(
-                    //   new vscode.SnippetString(`#${data.value}`)
-                    // );
                     break;
                 }
             }
