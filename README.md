@@ -7,11 +7,18 @@ Currently, I work both on my laptop and PC and regularly switch between them (sw
 
 So I deciced to make this extension which will, hopefully, solve this problem of mine.
 
+## Local developement
+
+-   Create `.env` file in `server/` and set `DATABASE_URL`
+-   `pnpm install` in root, `server/` and `solid/`
+-   `pnpm build:watch` in root, `pnpm dev` in `server/` and `pnpm build:watch` in `solid/`
+
 ## Features
 
 -   [x] Synchronize staged, unstaged, tracked and untracked file changes
 -   [ ] Manage multiple projects
--   [ ] Manual two-way or Auto synchronization
+-   [ ] Manual two-way synchronization
+-   [ ] Auto synchronization
 
 ## Requirements
 
@@ -19,7 +26,7 @@ So I deciced to make this extension which will, hopefully, solve this problem of
     -   project
     -   branch
     -   commit
--   VS Code: 1.63.0 or above (TODO: Lower)
+-   VS Code: 1.69.0 or above (TODO: Lower)
 
 ## Extension Settings
 
