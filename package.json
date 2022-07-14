@@ -54,7 +54,7 @@
         "vscode:prepublish": "npm run esbuild-base -- --minify",
         "build:base": "rm -rf dist/ && esbuild ./src/extension.ts --bundle --outfile=dist/main.js --external:vscode --format=cjs --platform=node",
         "build": "npm run build:base -- --sourcemap",
-        "dev": "npm run build:base -- --sourcemap --watch",
+        "build:watch": "npm run build:base -- --sourcemap --watch",
         "test-compile": "tsc -p ./",
         "package": "npx vsce package",
         "lint": "eslint . --fix --cache --ext .ts,.tsx",

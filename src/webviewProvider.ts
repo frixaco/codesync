@@ -22,13 +22,11 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
         webviewView.webview.onDidReceiveMessage((data) => {
-            console.log("onDidReceiveMessage", data);
-
             switch (data.type) {
                 case "send": {
-                    console.log("send");
                     vscode.commands.executeCommand("codesync.sendChanges", {
                         deviceId: data.deviceId,
+                        projectId: data.projectId,
                     });
                     // vscode.window.activeTextEditor?.insertSnippet(
                     //   new vscode.SnippetString(`#${data.value}`)
@@ -36,9 +34,9 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "receive": {
-                    console.log("receive");
                     vscode.commands.executeCommand("codesync.applyChanges", {
                         deviceId: data.deviceId,
+                        projectId: data.projectId,
                     });
                     // vscode.window.activeTextEditor?.insertSnippet(
                     //   new vscode.SnippetString(`#${data.value}`)
