@@ -3,11 +3,11 @@ dotenv.config();
 
 import fastify from "fastify";
 
-import routesPlugin from "./routes";
 import prismaDb from "./db";
 
 const app = fastify({ logger: true });
-app.register(routesPlugin, {});
+app.register(import("@fastify/cors"));
+app.register(import("./routes"));
 
 const PORT = Number(process.env.PORT) || 3001;
 
