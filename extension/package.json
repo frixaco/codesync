@@ -11,11 +11,11 @@
 		"url": "https://github.com/frixaco/codesync.git"
 	},
 	"publisher": "frixaco",
-	"main": "./dist/main.js",
+	"main": "./dist/extension.js",
 	"scripts": {
-		"build": "tsc --project ./",
-		"build:watch": "tsc -watch --project ./",
-		"dev": "tsc -watch --project ./",
+		"build": "tsc --project tsconfig.json",
+		"build:watch": "tsc --watch --project tsconfig.json",
+		"dev": "tsc --watch --project tsconfig.json",
 		"lint": "eslint .",
 		"package": "pnpx vsce package",
 		"prettier": "prettier --write --loglevel warn .",
@@ -46,7 +46,7 @@
 				{
 					"id": "codesync-sidepanel-view",
 					"title": "Codesync",
-					"icon": "assets/logo.svg"
+					"icon": "../assets/logo.svg"
 				}
 			]
 		}

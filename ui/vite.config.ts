@@ -21,5 +21,12 @@ export default defineConfig({
 	},
 	build: {
 		target: "esnext",
+		rollupOptions: {
+			output: {
+				chunkFileNames: "[name].js",
+				assetFileNames: "[name][extname]",
+				entryFileNames: "[name].js",
+			},
+		},
 	},
 });

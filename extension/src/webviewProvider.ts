@@ -16,7 +16,10 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 
 		webviewView.webview.options = {
 			enableScripts: true,
-			localResourceRoots: [this._extensionUri],
+			localResourceRoots: [
+				this._extensionUri,
+				vscode.Uri.joinPath(this._extensionUri, ".."),
+			],
 		};
 
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
@@ -49,24 +52,18 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 		const mainScriptUri = webview.asWebviewUri(
 			vscode.Uri.joinPath(
 				this._extensionUri,
-				"solid",
+				"..",
+				"ui",
 				"dist",
 				"index.js",
-			),
-		);
-		const vendorScriptUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(
-				this._extensionUri,
-				"solid",
-				"dist",
-				"vendor.js",
 			),
 		);
 
 		const stylesUri = webview.asWebviewUri(
 			vscode.Uri.joinPath(
 				this._extensionUri,
-				"solid",
+				"..",
+				"ui",
 				"dist",
 				"index.css",
 			),
@@ -83,7 +80,6 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
           <link rel="shortcut icon" type="image/ico" href="/favicon.ico" />
           <title>Solid App</title>
           <script nonce=${nonce} type="module" crossorigin src="${mainScriptUri}"></script>
-          <link nonce=${nonce} rel="modulepreload" href="${vendorScriptUri}">
           <link rel="stylesheet" href="${stylesUri}">
         </head>
         <body>
