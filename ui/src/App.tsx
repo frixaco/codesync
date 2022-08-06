@@ -106,11 +106,11 @@ function App() {
 
 const btn = `rounded-0 border-none text-white decoration-none cursor-pointer py-1 align-mid hover:op-80`;
 
-function Projects({
-    onChoose,
-}: {
+interface ProjectProps {
     onChoose: (chosenProject: Project) => void;
-}) {
+}
+
+function Projects(props: ProjectProps) {
     const [projectName, setProjectName] = createSignal("");
 
     const handleProjectCreate = async () => {
@@ -154,7 +154,7 @@ function Projects({
                                             ? "op-80"
                                             : ""
                                     }`}
-                                    onClick={() => onChoose(project)}
+                                    onClick={() => props.onChoose(project)}
                                 >
                                     Choose
                                 </button>

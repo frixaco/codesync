@@ -1,84 +1,21 @@
 {
-    "name": "codesync",
-    "displayName": "Codesync",
-    "publisher": "frixaco",
-    "description": "Synchronize your code changes across your devices",
-    "version": "0.0.1",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/frixaco/codesync.git"
-    },
-    "engines": {
-        "vscode": "^1.70.0"
-    },
-    "categories": [
-        "Other"
-    ],
-    "main": "./dist/main.js",
-    "activationEvents": [
-        "onView:codesync.webview",
-        "onCommand:codesync.applyChanges",
-        "onCommand:codesync.sendChanges"
-    ],
-    "contributes": {
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "codesync-sidepanel-view",
-                    "title": "Codesync",
-                    "icon": "assets/logo.svg"
-                }
-            ]
-        },
-        "views": {
-            "codesync-sidepanel-view": [
-                {
-                    "type": "webview",
-                    "id": "codesync.webview",
-                    "name": "Codesync"
-                }
-            ]
-        },
-        "commands": [
-            {
-                "command": "codesync.applyChanges",
-                "title": "CodeSync: Apply changes from other device(s)"
-            },
-            {
-                "command": "codesync.sendChanges",
-                "title": "CodeSync: Send changes to other device(s)"
-            }
-        ]
-    },
+    "name": "codesync-monorepo",
     "scripts": {
-        "vscode:prepublish": "npm run esbuild-base -- --minify",
-        "build:base": "rm -rf dist/ && esbuild ./src/extension.ts --bundle --outfile=dist/main.js --external:vscode --format=cjs --platform=node",
-        "build": "npm run build:base -- --sourcemap",
-        "build:watch": "npm run build:base -- --sourcemap --watch",
-        "test-compile": "tsc -p ./",
-        "package": "npx vsce package",
-        "lint": "eslint . --fix --cache --ext .ts,.tsx",
-        "format": "prettier --write \"**/*.{ts,tsx}\"",
-        "prepare": "husky install"
+        "dev": "pnpm -r --parallel run build:watch",
+        "lint": "pnpm -r --parallel run lint",
+        "prepare": "husky install",
+        "prettier": "pnpm -r --parallel run prettier"
     },
     "devDependencies": {
-        "@types/glob": "^7.2.0",
-        "@types/mocha": "^9.1.1",
-        "@types/node": "^18.6.4",
-        "@types/vscode": "^1.69.1",
+        "@tsconfig/node16-strictest": "^1.0.3",
+        "@types/node": "^16.11.7",
         "@typescript-eslint/eslint-plugin": "^5.32.0",
         "@typescript-eslint/parser": "^5.32.0",
-        "@vscode/test-electron": "^2.1.5",
-        "esbuild": "^0.14.53",
         "eslint": "^8.21.0",
         "eslint-config-prettier": "^8.5.0",
-        "glob": "^7.2.3",
+        "eslint-plugin-solid": "^0.7.1",
         "husky": "^8.0.1",
-        "mocha": "^10.0.0",
         "prettier": "^2.7.1",
         "typescript": "^4.7.4"
-    },
-    "dependencies": {
-        "axios": "^0.27.2"
     }
 }

@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
-import { GitExtension } from "./git";
-import axios from "axios";
+import type { GitExtension } from "./git";
 import { CodesyncWebviewProvider } from "./webviewProvider";
 import * as child_process from "child_process";
 
@@ -37,16 +36,33 @@ export async function activate(context: vscode.ExtensionContext) {
                 const git = await getGitAPI();
                 const repositories = git?.repositories || [];
                 // TODO: should pick correct repo if multiple are open
+                if (!repositories || !repositories[0]) {
+                    vscode.window.showErrorMessage(
+                        "Failed to detect repository."
+                    );
+                    return;
+                }
+
+                if (
+                    !vscode.workspace.workspaceFolders ||
+                    !vscode.workspace.workspaceFolders[0]
+                ) {
+                    vscode.window.showErrorMessage(
+                        "Failed to detect workspace folder."
+                    );
+                    return;
+                }
+
                 const repo = await git?.init(repositories[0].rootUri);
                 const cmd_add_to_index = `git status --porcelain | sed -r 's/^.{3}//' | while read line; do git add -N $line; done`;
-                const cwd = vscode.workspace.workspaceFolders![0].uri.fsPath;
+                const cwd = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
                 child_process.exec(
                     cmd_add_to_index,
                     {
                         cwd,
                     },
-                    (error, stdout, stderr) => {
+                    (error, _stdout, _stderr) => {
                         // TODO: move `| sed -r 's/^.{3}//' | while read line; do git add -N $line; done`
                         // to here, to remove dependency on bash commands
                         if (error) {
@@ -65,13 +81,15 @@ export async function activate(context: vscode.ExtensionContext) {
                 diff.staged = (await repo?.diff(true)) || "";
                 diff.unstaged = (await repo?.diff()) || "";
 
-                const response = await axios.post(
-                    "http://localhost:3001/change",
-                    {
-                        diff: JSON.stringify(diff),
-                        projectId,
-                    }
-                );
+                const response = await (
+                    await fetch("http://localhost:3001/change", {
+                        method: "POST",
+                        body: JSON.stringify({
+                            diff: JSON.stringify(diff),
+                            projectId,
+                        }),
+                    })
+                ).json();
 
                 if (response.data.success) {
                     vscode.window.showInformationMessage(
@@ -91,21 +109,34 @@ export async function activate(context: vscode.ExtensionContext) {
                 const git = await getGitAPI();
                 const repositories = git?.repositories || [];
                 // TODO: should pick correct repo if multiple are open
+                if (!repositories || !repositories[0]) {
+                    vscode.window.showErrorMessage(
+                        "Failed to detect repository."
+                    );
+                    return;
+                }
+
                 const repo = await git?.init(repositories[0].rootUri);
 
-                const currentDir = vscode.workspace.workspaceFolders || [];
+                const currentDir = vscode.workspace.workspaceFolders;
+                if (!currentDir || !currentDir[0]) {
+                    vscode.window.showErrorMessage(
+                        "Failed to detect workspace folder."
+                    );
+                    return;
+                }
                 const stagedPatch = `${currentDir[0].uri.fsPath}/staged.patch`;
                 const unstagedPatch = `${currentDir[0].uri.fsPath}/unstaged.patch`;
 
                 try {
-                    const retrievedChanges = await axios.get(
-                        "http://localhost:3001/change",
-                        {
-                            params: {
-                                projectId,
-                            },
-                        }
-                    );
+                    const retrievedChanges = await (
+                        await fetch(
+                            "http://localhost:3001/change" +
+                                +new URLSearchParams({
+                                    projectId,
+                                })
+                        )
+                    ).json();
                     if (!retrievedChanges.data.success) {
                         throw new Error();
                     }
@@ -125,15 +156,14 @@ export async function activate(context: vscode.ExtensionContext) {
                     await repo?.apply(stagedPatch);
 
                     const cmd_stage = `git add -A && git reset -- *.patch`;
-                    const cwd =
-                        vscode.workspace.workspaceFolders![0].uri.fsPath;
+                    const cwd = currentDir[0].uri.fsPath;
 
                     child_process.exec(
                         cmd_stage,
                         {
                             cwd,
                         },
-                        (error, stdout, stderr) => {
+                        (error, _stdout, _stderr) => {
                             // TODO: move `| sed -r 's/^.{3}//' | while read line; do git add -N $line; done`
                             // to here, to remove dependency on bash commands
                             if (error) {

@@ -1,14 +1,17 @@
-import { FastifyInstance, FastifyPluginOptions } from "fastify";
+import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import fp from "fastify-plugin";
 import prismaDb from "./db";
 
-async function router(fastify: FastifyInstance, options: FastifyPluginOptions) {
+async function router(
+    fastify: FastifyInstance,
+    _options: FastifyPluginOptions
+) {
     /**
      * Create or update project
      */
-    fastify.post("/project", {}, async (request, reply) => {
+    fastify.post("/project", {}, async (request, _reply) => {
         console.log("request.body", request.body, typeof request.body);
-        const { projectId, name, ownerId } = request.body as any;
+        const { projectId, name } = request.body as never; // ownerId
 
         if (projectId) {
             await prismaDb.project.update({
@@ -42,8 +45,8 @@ async function router(fastify: FastifyInstance, options: FastifyPluginOptions) {
         return { success: true };
     });
 
-    fastify.get("/project", {}, async (request, reply) => {
-        const { ownerId } = request.query as any;
+    fastify.get("/project", {}, async (_request, _reply) => {
+        // const { ownerId } = request.query as any;
         const projects = await prismaDb.project.findMany();
         console.log("projects", projects);
 
@@ -64,7 +67,7 @@ async function router(fastify: FastifyInstance, options: FastifyPluginOptions) {
      * Create diff for project
      */
     fastify.post("/change", {}, async (request, reply) => {
-        const { diff, projectId, authorId } = request.body as any;
+        const { diff, projectId } = request.body as never; // authorId
 
         const project = await prismaDb.project.findUnique({
             where: {
@@ -109,7 +112,7 @@ async function router(fastify: FastifyInstance, options: FastifyPluginOptions) {
      * Get diff for a project
      */
     fastify.get("/change", {}, async (request, reply) => {
-        const { projectId } = request.query as any;
+        const { projectId } = request.query as never;
 
         const change = await prismaDb.change.findUnique({
             where: {

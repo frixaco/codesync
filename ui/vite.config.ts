@@ -16,15 +16,10 @@ export default defineConfig({
             },
         }),
     ],
+    server: {
+        port: 3000,
+    },
     build: {
         target: "esnext",
-        polyfillDynamicImport: false,
-        rollupOptions: {
-            output: {
-                chunkFileNames: "[name].js",
-                assetFileNames: "[name][extname]",
-                entryFileNames: "[name].js",
-            },
-        },
     },
 });

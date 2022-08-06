@@ -1,28 +1,34 @@
 /**
  * @type {import("eslint").Linter.Config}
  */
-const config = {
+module.exports = {
     env: {
+        browser: true,
         node: true,
     },
     root: true,
-    parser: "@typescript-eslint/parser",
-    plugins: ["@typescript-eslint"],
-    extends: [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended",
-        "prettier",
+    ignorePatterns: ["node_modules", "dist", "build"],
+    overrides: [
+        {
+            files: ["*.js", "*.jsx", "*.ts", "*.tsx"],
+            parser: "@typescript-eslint/parser",
+            plugins: ["@typescript-eslint"],
+            extends: [
+                "eslint:recommended",
+                "plugin:@typescript-eslint/eslint-recommended",
+                "plugin:@typescript-eslint/recommended",
+                "prettier",
+            ],
+            rules: {
+                "@typescript-eslint/no-unused-vars": [
+                    "error",
+                    {
+                        args: "none",
+                        argsIgnorePattern: "^_",
+                        varsIgnorePattern: "^_",
+                    },
+                ],
+            },
+        },
     ],
-    rules: {
-        "@typescript-eslint/no-explicit-any": "warn",
-        "@typescript-eslint/no-empty-interface": "warn",
-        "@typescript-eslint/no-non-null-assertion": "warn",
-        "@typescript-eslint/no-unused-vars": [
-            "warn",
-            // { args: "none", argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
-        ],
-        "no-console": ["warn"],
-    },
 };
-module.exports = config;

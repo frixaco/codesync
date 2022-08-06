@@ -1,0 +1,21 @@
+{
+    "name": "codesync-ui",
+    "private": "true",
+    "scripts": {
+        "build": "vite build",
+        "build:watch": "vite build --watch",
+        "dev": "vite",
+        "lint": "eslint .",
+        "prettier": "prettier --write --loglevel warn .",
+        "serve": "vite preview"
+    },
+    "dependencies": {
+        "solid-js": "^1.4.8"
+    },
+    "devDependencies": {
+        "@unocss/preset-uno": "^0.45.5",
+        "unocss": "^0.45.5",
+        "vite": "^3.0.4",
+        "vite-plugin-solid": "^2.3.0"
+    }
+}
