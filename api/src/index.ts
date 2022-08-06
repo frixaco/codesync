@@ -25,7 +25,7 @@ app.register(fastifyOauth2, {
 		auth: fastifyOauth2.GITHUB_CONFIGURATION,
 	},
 	startRedirectPath: "/login",
-	callbackUri: "http://localhost:4000/login/callback",
+	callbackUri: "http://localhost:4000/github",
 	scope: [],
 });
 app.register(import("./routes"));

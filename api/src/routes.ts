@@ -6,27 +6,19 @@ async function router(
 	fastify: FastifyInstance,
 	_options: FastifyPluginOptions,
 ) {
-	fastify.get("/login/callback", async function (request, reply) {
-		const token =
-			await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(
-				request,
-			);
-
-		token.expired();
-		await token.refresh();
-		await token.revoke("access_token");
-		await token.revokeAll();
-		token.token.access_token;
-		token.token.refresh_token;
-		token.token.expires_at;
-		token.token.expires_in;
-		token.token.token_type;
-
-		// if later you need to refresh the token you can use
-		// const newToken = await this.getNewAccessTokenUsingRefreshToken(token.refresh_token)
-
-		reply.send({ access_token: token.token.access_token });
+	/**
+	 * Authorization callback URL to finish authorization
+	 */
+	fastify.get("/github", {}, async function (request, reply) {
+		const code = (request.query as any).code;
+		const state = (request.query as any).state;
+		console.log(`
+        code: ${code};
+        state: ${state}
+        `);
+		return { success: true };
 	});
+
 	/**
 	 * Create or update project
 	 */
