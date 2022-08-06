@@ -1,4 +1,5 @@
 {
+  "private": "true",
   "name": "codesync-ui",
   "scripts": {
     "start": "vite",
@@ -7,16 +8,15 @@
     "build:watch": "vite build --watch",
     "serve": "vite preview"
   },
-  "license": "MIT",
   "devDependencies": {
-    "@unocss/preset-uno": "^0.44.1",
+    "@unocss/preset-uno": "^0.45.5",
     "prettier": "^2.7.1",
     "typescript": "^4.7.4",
-    "unocss": "^0.44.1",
-    "vite": "^2.9.14",
-    "vite-plugin-solid": "^2.2.6"
+    "unocss": "^0.45.5",
+    "vite": "^3.0.4",
+    "vite-plugin-solid": "^2.3.0"
   },
   "dependencies": {
-    "solid-js": "^1.4.7"
+    "solid-js": "^1.4.8"
   }
 }
