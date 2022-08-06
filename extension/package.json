@@ -1,0 +1,70 @@
+{
+	"name": "codesync-extension",
+	"displayName": "Codesync",
+	"version": "0.0.1",
+	"description": "Synchronize your code changes across your devices",
+	"categories": [
+		"Other"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/frixaco/codesync.git"
+	},
+	"publisher": "frixaco",
+	"main": "./dist/main.js",
+	"scripts": {
+		"build": "tsc --project ./",
+		"build:watch": "tsc -watch --project ./",
+		"dev": "tsc -watch --project ./",
+		"lint": "eslint .",
+		"package": "pnpx vsce package",
+		"prettier": "prettier --write --loglevel warn .",
+		"vscode:prepublish": "pnpm run build"
+	},
+	"contributes": {
+		"commands": [
+			{
+				"command": "codesync.applyChanges",
+				"title": "CodeSync: Apply changes from other device(s)"
+			},
+			{
+				"command": "codesync.sendChanges",
+				"title": "CodeSync: Send changes to other device(s)"
+			}
+		],
+		"views": {
+			"codesync-sidepanel-view": [
+				{
+					"type": "webview",
+					"id": "codesync.webview",
+					"name": "Codesync"
+				}
+			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "codesync-sidepanel-view",
+					"title": "Codesync",
+					"icon": "assets/logo.svg"
+				}
+			]
+		}
+	},
+	"activationEvents": [
+		"onView:codesync.webview",
+		"onCommand:codesync.applyChanges",
+		"onCommand:codesync.sendChanges"
+	],
+	"devDependencies": {
+		"@types/glob": "^7.2.0",
+		"@types/mocha": "^9.1.1",
+		"@types/vscode": "^1.69.1",
+		"@vscode/test-electron": "^2.1.5",
+		"glob": "^7.2.3",
+		"mocha": "^10.0.0"
+	},
+	"engines": {
+		"vscode": "^1.69.1"
+	}
+}

@@ -1,4 +1,4 @@
 packages:
-    - "vscode"
-    - "server"
+    - "api"
+    - "extension"
     - "ui"

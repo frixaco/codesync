@@ -1,0 +1,25 @@
+{
+	"name": "codesync-api",
+	"private": "true",
+	"scripts": {
+		"build": "tsc --project ./",
+		"build:watch": "tsc --watch --project ./",
+		"db:gen": "prisma generate",
+		"db:push": "prisma db push",
+		"dev": "tsnd --respawn --exit-child --files src/index.ts",
+		"lint": "eslint .",
+		"prettier": "prettier --write --loglevel warn ."
+	},
+	"dependencies": {
+		"@fastify/cors": "^8.1.0",
+		"@fastify/oauth2": "^6.0.0",
+		"@prisma/client": "^4.1.1",
+		"dotenv": "^16.0.1",
+		"fastify": "^4.3.0",
+		"fastify-plugin": "^4.0.0"
+	},
+	"devDependencies": {
+		"pino-pretty": "^8.1.0",
+		"prisma": "^4.1.1"
+	}
+}

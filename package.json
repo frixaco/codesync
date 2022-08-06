@@ -1,21 +1,25 @@
 {
-    "name": "codesync-monorepo",
-    "scripts": {
-        "dev": "pnpm -r --parallel run build:watch",
-        "lint": "pnpm -r --parallel run lint",
-        "prepare": "husky install",
-        "prettier": "pnpm -r --parallel run prettier"
-    },
-    "devDependencies": {
-        "@tsconfig/node16-strictest": "^1.0.3",
-        "@types/node": "^16.11.7",
-        "@typescript-eslint/eslint-plugin": "^5.32.0",
-        "@typescript-eslint/parser": "^5.32.0",
-        "eslint": "^8.21.0",
-        "eslint-config-prettier": "^8.5.0",
-        "eslint-plugin-solid": "^0.7.1",
-        "husky": "^8.0.1",
-        "prettier": "^2.7.1",
-        "typescript": "^4.7.4"
-    }
+	"name": "codesync-monorepo",
+	"scripts": {
+		"dev": "pnpm -r --parallel run dev",
+		"lint": "pnpm -r --parallel run lint",
+		"prepare": "husky install",
+		"prettier": "pnpm -r --parallel run prettier",
+		"api": "pnpm --filter codesync-api dev",
+		"ui": "pnpm --filter codesync-ui dev",
+		"extension": "pnpm --filter codesync-extension dev"
+	},
+	"devDependencies": {
+		"@types/node": "^16.11.7",
+		"@typescript-eslint/eslint-plugin": "^5.32.0",
+		"@typescript-eslint/parser": "^5.32.0",
+		"eslint": "^8.21.0",
+		"eslint-config-prettier": "^8.5.0",
+		"eslint-plugin-solid": "^0.7.1",
+		"husky": "^8.0.1",
+		"lint-staged": "^13.0.3",
+		"prettier": "^2.7.1",
+		"ts-node-dev": "^2.0.0",
+		"typescript": "^4.7.4"
+	}
 }
