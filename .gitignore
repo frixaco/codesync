@@ -8,7 +8,7 @@ dist/
 tsconfig.lsif.json
 *.lsif
 *.db
-.vscode/
+!.vscode/
 .env
 .pnpm-debug.log
 .eslintcache
