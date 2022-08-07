@@ -1,4 +1,4 @@
-import { createResource, createSignal, For } from "solid-js";
+import { createResource, createSignal, For, Show } from "solid-js";
 import "uno.css";
 interface Project {
 	id: string;
@@ -51,60 +51,79 @@ const createProject = async ({ name }: { name: string }): Promise<boolean> => {
 const [targetProject, setTargetProject] = createSignal<Project>();
 
 function App() {
+	const [isAuth, setIsAuth] = createSignal(false);
+
 	const onChooseProject = (chosenProject: Project) => {
 		setTargetProject(chosenProject);
 	};
 
 	return (
-		<div class="flex flex-col my-1">
-			{targetProject() && (
-				<div>
-					<div class="flex justify-between mt-2">
-						<span class="font-bold">
-							Project:{" "}
-							{`${targetProject()?.name} (${
-								targetProject()?.id
-							})`}
-						</span>
-					</div>
-
-					<div class="flex flex-col mt-3 justify-center items-stretch gap-2">
-						<button
-							class={`bg-vsgreen ${btn} py-2 px-6`}
-							onClick={() =>
-								onSend({
-									projectId: targetProject()?.id as string,
-								})
-							}
-						>
-							PUSH CHANGES TO SERVER
-						</button>
-
-						<button
-							title="Fetch changes for this "
-							class={`bg-vsblue ${btn} py-2 px-4`}
-							onClick={() =>
-								onReceive({
-									projectId: targetProject()?.id as string,
-								})
-							}
-						>
-							FETCH CHANGES AND APPLY
-						</button>
-					</div>
+		<Show
+			when={isAuth()}
+			fallback={
+				<div class="h-96 flex flex-col items-center justify-items-center my-12">
+					<a
+						class={`bg-vsgreen ${btn} py-2 px-6 hover:text-white`}
+						href={"http://localhost:4000/oauth/github/authorize"}
+						onClick={() => setIsAuth(true)}
+					>
+						LOGIN WITH GITHUB
+					</a>
 				</div>
-			)}
+			}
+		>
+			<div class="flex flex-col my-1">
+				{targetProject() && (
+					<div>
+						<div class="flex justify-between mt-2">
+							<span class="font-bold">
+								Project:{" "}
+								{`${targetProject()?.name} (${
+									targetProject()?.id
+								})`}
+							</span>
+						</div>
 
-			<div>
-				<p class="font-bold mt-4 mb-0">PROJECTS</p>
+						<div class="flex flex-col mt-3 justify-center items-stretch gap-2">
+							<button
+								class={`bg-vsgreen ${btn} py-2 px-6`}
+								onClick={() =>
+									onSend({
+										projectId: targetProject()
+											?.id as string,
+									})
+								}
+							>
+								PUSH CHANGES TO SERVER
+							</button>
 
-				<Projects onChoose={onChooseProject} />
+							<button
+								title="Fetch changes for this "
+								class={`bg-vsblue ${btn} py-2 px-4`}
+								onClick={() =>
+									onReceive({
+										projectId: targetProject()
+											?.id as string,
+									})
+								}
+							>
+								FETCH CHANGES AND APPLY
+							</button>
+						</div>
+					</div>
+				)}
+
+				<div>
+					<p class="font-bold mt-4 mb-0">PROJECTS</p>
+
+					<Projects onChoose={onChooseProject} />
+				</div>
 			</div>
-		</div>
+		</Show>
 	);
 }
 
-const btn = `rounded-0 border-none text-white decoration-none cursor-pointer py-1 align-mid hover:op-80`;
+const btn = `rounded-0 border-none text-white text-center decoration-none cursor-pointer py-1 align-mid hover:op-80`;
 
 interface ProjectProps {
 	onChoose: (chosenProject: Project) => void;

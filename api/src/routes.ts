@@ -7,22 +7,34 @@ async function router(
 	_options: FastifyPluginOptions,
 ) {
 	/**
-	 * Authorization callback URL to finish authorization
+	 * Redirect user to authorize using Github OAuth
 	 */
-	fastify.get("/github", {}, async function (request, reply) {
-		const code = (request.query as any).code;
-		const state = (request.query as any).state;
-		console.log(`
-        code: ${code};
-        state: ${state}
-        `);
-		return { success: true };
-	});
+	fastify.get(
+		"/login/oauth/github/authorize",
+		async function (request, reply) {
+			const authorizationEndpoint =
+				fastify.githubOAuth2.generateAuthorizationUri(request);
+			reply.redirect(authorizationEndpoint);
+		},
+	);
 
 	/**
-	 * Create or update project
+	 * Finish Github OAuth process
 	 */
-	fastify.post("/project", {}, async (request, _reply) => {
+	fastify.get(
+		"/login/oauth/github/callback",
+		{},
+		async function (request, reply) {
+			const code = (request.query as any).code;
+			const state = (request.query as any).state;
+			return { success: true, code, state };
+		},
+	);
+
+	/**
+	 * Create/Update project
+	 */
+	fastify.post("/project", {}, async (request, reply) => {
 		console.log("request.body", request.body, typeof request.body);
 		const { projectId, name } = request.body as never; // ownerId
 
@@ -58,7 +70,10 @@ async function router(
 		return { success: true };
 	});
 
-	fastify.get("/project", {}, async (_request, _reply) => {
+	/**
+	 * Get user projects
+	 */
+	fastify.get("/project", {}, async (request, reply) => {
 		// const { ownerId } = request.query as any;
 		const projects = await prismaDb.project.findMany();
 		console.log("projects", projects);
@@ -77,7 +92,7 @@ async function router(
 	});
 
 	/**
-	 * Create diff for project
+	 * Save project diff
 	 */
 	fastify.post("/change", {}, async (request, reply) => {
 		const { diff, projectId } = request.body as never; // authorId
@@ -122,7 +137,7 @@ async function router(
 	});
 
 	/**
-	 * Get diff for a project
+	 * Get project diff
 	 */
 	fastify.get("/change", {}, async (request, reply) => {
 		const { projectId } = request.query as never;
