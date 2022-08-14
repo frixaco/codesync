@@ -11,16 +11,16 @@ import prismaDb from "./db";
 import { authRoutes, privateRoutes } from "./routes";
 import { FastifyCookieOptions } from "@fastify/cookie";
 import got from "got";
+import { GithubToken } from "./types";
 
 dotenv.config();
 
 const app = fastify({
-	// logger: {
-	// 	transport: {
-	// 		target: "pino-pretty",
-	// 	},
-	// },
-	logger: false,
+	logger: {
+		transport: {
+			target: "pino-pretty",
+		},
+	},
 });
 
 app.register(import("@fastify/cors"));
@@ -51,7 +51,13 @@ app.register(
 		fastify.decorate(
 			"verifyUser",
 			async function (
-				request: FastifyRequest,
+				request: FastifyRequest<{
+					Querystring: {
+						ownerId: string;
+						accessToken: string;
+						refreshToken: string;
+					};
+				}>,
 				reply: FastifyReply,
 				next: (error?: object) => void,
 			) {
@@ -81,6 +87,8 @@ app.register(
 				// });
 				// // console.log("token", token);
 
+				const { ownerId, accessToken } = request.query;
+
 				try {
 					await got
 						.post(
@@ -88,7 +96,6 @@ app.register(
 							{
 								headers: {
 									Accept: "application/vnd.github+json",
-									// Authorization: `token ${token}`,
 									Authorization: `Basic ${Buffer.from(
 										process.env.GITHUB_CLIENT_ID +
 											":" +
@@ -96,13 +103,51 @@ app.register(
 									).toString("base64")}`,
 								},
 								body: JSON.stringify({
-									access_token: request.headers.accessToken,
+									access_token: accessToken,
 								}),
 							},
 						)
 						.json();
 				} catch (err) {
-					next({ success: false, errorMessage: "Not authorized" });
+					const user = await prismaDb.user.findUnique({
+						where: {
+							id: +ownerId,
+						},
+					});
+
+					if (!user) {
+						next({
+							success: false,
+							statusCode: 401,
+							errorMessage: "Not authorized. User not found",
+						});
+					}
+
+					const newAccessToken = (await got
+						.post("https://github.com/login/oauth/access_token", {
+							searchParams: new URLSearchParams({
+								refresh_token: user?.refreshToken || "",
+								grant_type: "refresh_token",
+								client_id: process.env.GITHUB_CLIENT_ID,
+								client_secret: process.env.GITHUB_CLIENT_SECRET,
+							}),
+						})
+						.json()) as GithubToken;
+					console.log("NEW TOKEN DATA", newAccessToken);
+
+					await prismaDb.user.update({
+						where: {
+							id: +ownerId,
+						},
+						data: {
+							refreshToken: newAccessToken.refresh_token,
+						},
+					});
+
+					reply.setCookie("gh-auth", newAccessToken.access_token, {
+						httpOnly: true,
+						secure: true,
+					});
 				}
 				next();
 			},

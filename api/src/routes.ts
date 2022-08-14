@@ -48,25 +48,36 @@ export async function authRoutes(
 				})
 				.json();
 
-			const newUser = await prismaDb.user.create({
-				data: {
+			let newUser = await prismaDb.user.findUnique({
+				where: {
 					githubId: githubUser.id,
-					refreshToken: authData.token.refresh_token || "",
 				},
 			});
-			console.log(`
-				USER CREATED
-				id: ${newUser.id}
-				githubId: ${newUser.githubId}
-				accessToken: ${authData.token.access_token}
-				refreshToken: ${newUser.refreshToken}
-			`);
+			if (!newUser) {
+				newUser = await prismaDb.user.create({
+					data: {
+						githubId: githubUser.id,
+						refreshToken: authData.token.refresh_token || "",
+					},
+				});
+			} else {
+				newUser = await prismaDb.user.update({
+					where: {
+						id: newUser.id,
+					},
+					data: {
+						refreshToken: authData.token.refresh_token || "",
+					},
+				});
+			}
+
+			console.log("USER CREATED", newUser.id);
 
 			reply.setCookie("gh-auth", authData.token.access_token, {
 				httpOnly: true,
 				secure: true,
 			});
-			console.log("COOKIE SET", authData.token.access_token);
+			console.log("AUTH DATA", authData);
 
 			reply
 				.type("text/html")
@@ -85,7 +96,7 @@ export async function privateRoutes(
 	 * Create/Update project
 	 */
 	fastify.post<{
-		Body: { projectId: number; name: string; ownerId: number };
+		Body: { projectId?: number; name: string; ownerId: string };
 	}>(
 		"/project",
 		{
@@ -105,7 +116,7 @@ export async function privateRoutes(
 						name,
 						owner: {
 							connect: {
-								id: ownerId,
+								id: +ownerId,
 							},
 						},
 					},
@@ -116,7 +127,7 @@ export async function privateRoutes(
 						name,
 						owner: {
 							connect: {
-								id: ownerId,
+								id: +ownerId,
 							},
 						},
 					},
@@ -130,13 +141,13 @@ export async function privateRoutes(
 	/**
 	 * Get user projects
 	 */
-	fastify.get<{ Body: { ownerId: number } }>(
+	fastify.get<{ Querystring: { ownerId: string; accessToken: string } }>(
 		"/project",
 		{
 			preHandler: fastify.auth([fastify.verifyUser]),
 		},
 		async function (request, reply) {
-			const { ownerId } = request.body;
+			const { ownerId } = request.query;
 
 			const user = await prismaDb.user.findUnique({
 				where: {
@@ -154,40 +165,48 @@ export async function privateRoutes(
 	/**
 	 * Save project diff
 	 */
-	fastify.post(
+	fastify.post<{
+		Body: { diff: string; projectId: string; authorId: string };
+	}>(
 		"/change",
 		{
 			preHandler: fastify.auth([fastify.verifyUser]),
 		},
 		async function (request, reply) {
-			const { diff, projectId, authorId } = request.body as never;
+			const { diff, projectId, authorId } = request.body;
 
 			const project = await prismaDb.project.findUnique({
 				where: {
-					id: projectId,
+					id: +projectId,
 				},
 			});
 			if (!project) {
-				reply.send({ success: false });
+				reply.send({
+					success: false,
+					errorMessage: "Project not found",
+				});
 				return;
 			}
 
 			const author = await prismaDb.user.findUnique({
 				where: {
-					id: authorId,
+					id: +authorId,
 				},
 			});
 			if (!author) {
-				reply.send({ success: false });
+				reply.send({
+					success: false,
+					errorMessage: "Author not found",
+				});
 				return;
 			}
 
-			await prismaDb.change.create({
+			const change = await prismaDb.change.create({
 				data: {
 					diff,
 					author: {
 						connect: {
-							id: authorId,
+							id: +authorId,
 						},
 					},
 					project: {
@@ -198,29 +217,32 @@ export async function privateRoutes(
 				},
 			});
 
-			reply.send({ success: true });
+			reply.send({ success: true, changeId: change.id });
 		},
 	);
 
 	/**
 	 * Get project diff
 	 */
-	fastify.get(
+	fastify.get<{ Querystring: { projectId: string } }>(
 		"/change",
 		{
 			preHandler: fastify.auth([fastify.verifyUser]),
 		},
 		async function (request, reply) {
-			const { projectId } = request.query as never;
+			const { projectId } = request.query;
 
 			const change = await prismaDb.change.findUnique({
 				where: {
-					projectId: Number(projectId),
+					projectId: +projectId,
 				},
 			});
 
 			if (!change) {
-				reply.send({ success: false });
+				reply.send({
+					success: false,
+					errorMessage: "Project changes not found",
+				});
 				return;
 			}
 
