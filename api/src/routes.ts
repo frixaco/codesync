@@ -82,7 +82,11 @@ export async function authRoutes(
 			reply
 				.type("text/html")
 				.send(
-					`<p>SUCCESS. User ${githubUser.login} has been created and authorized.</p>`,
+					`<p>SUCCESS. User ${
+						githubUser.login
+					} has been created and authorized.\nTOKEN OBJECT: ${JSON.stringify(
+						authData,
+					)}</p>`,
 				);
 		},
 	);

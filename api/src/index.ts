@@ -11,7 +11,6 @@ import prismaDb from "./db";
 import { authRoutes, privateRoutes } from "./routes";
 import { FastifyCookieOptions } from "@fastify/cookie";
 import got from "got";
-import { GithubToken } from "./types";
 
 dotenv.config();
 
@@ -54,8 +53,7 @@ app.register(
 				request: FastifyRequest<{
 					Querystring: {
 						ownerId: string;
-						accessToken: string;
-						refreshToken: string;
+						accessToken: string; // JSON stringified Token object
 					};
 				}>,
 				reply: FastifyReply,
@@ -103,7 +101,8 @@ app.register(
 									).toString("base64")}`,
 								},
 								body: JSON.stringify({
-									access_token: accessToken,
+									access_token:
+										JSON.parse(accessToken).access_token,
 								}),
 							},
 						)
@@ -123,31 +122,64 @@ app.register(
 						});
 					}
 
-					const newAccessToken = (await got
-						.post("https://github.com/login/oauth/access_token", {
-							searchParams: new URLSearchParams({
-								refresh_token: user?.refreshToken || "",
-								grant_type: "refresh_token",
-								client_id: process.env.GITHUB_CLIENT_ID,
-								client_secret: process.env.GITHUB_CLIENT_SECRET,
-							}),
-						})
-						.json()) as GithubToken;
+					const newAccessToken =
+						await fastify.githubOAuth2.getNewAccessTokenUsingRefreshToken(
+							{
+								refresh_token: user?.refreshToken,
+								access_token: "blahblah",
+								expires_at: new Date(
+									"2022-08-19T16:29:32.958Z",
+								),
+								expires_in: 30000,
+								token_type: "bearer",
+							},
+							{},
+						);
+
 					console.log("NEW TOKEN DATA", newAccessToken);
 
-					await prismaDb.user.update({
-						where: {
-							id: +ownerId,
-						},
-						data: {
-							refreshToken: newAccessToken.refresh_token,
-						},
-					});
-
-					reply.setCookie("gh-auth", newAccessToken.access_token, {
-						httpOnly: true,
-						secure: true,
-					});
+					if (
+						newAccessToken.token.access_token &&
+						newAccessToken.token.access_token.length > 0
+					) {
+						console.log("OLD refreshToken", user?.refreshToken);
+						console.log(
+							"NEW refreshToken",
+							newAccessToken.token.refresh_token,
+						);
+						await prismaDb.user.update({
+							where: {
+								id: +ownerId,
+							},
+							data: {
+								refreshToken:
+									newAccessToken.token.refresh_token,
+							},
+						});
+						reply.setCookie(
+							"gh-auth",
+							newAccessToken.token.access_token,
+							{
+								httpOnly: true,
+								secure: true,
+							},
+						);
+						console.log(
+							"OLD ACCESS TOKEN",
+							JSON.parse(accessToken).access_token,
+						);
+						console.log(
+							"NEW ACCESS TOKEN",
+							newAccessToken.token.access_token,
+						);
+						next();
+					} else {
+						next({
+							success: false,
+							statusCode: 401,
+							errorMessage: `No access token`,
+						});
+					}
 				}
 				next();
 			},
