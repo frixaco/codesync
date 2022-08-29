@@ -1,7 +1,7 @@
+import * as child_process from "child_process";
 import * as vscode from "vscode";
 import type { GitExtension } from "./git";
 import { CodesyncWebviewProvider } from "./webviewProvider";
-import * as child_process from "child_process";
 
 async function getGitAPI() {
 	try {
@@ -190,6 +190,18 @@ export async function activate(context: vscode.ExtensionContext) {
 				} catch (error) {
 					vscode.window.showErrorMessage("Error, try again");
 				}
+			},
+		),
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			"codesync.saveAccessToken",
+			async ({ accessToken }) => {
+				await context.workspaceState.update(
+					"codesync.accessToken",
+					accessToken,
+				);
 			},
 		),
 	);

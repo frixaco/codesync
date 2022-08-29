@@ -1,6 +1,16 @@
-import { createResource, createSignal, For, Show } from "solid-js";
+import {
+	createEffect,
+	createResource,
+	createSignal,
+	onCleanup,
+	Show,
+} from "solid-js";
 import "uno.css";
-interface Project {
+import { Projects } from "./Project";
+
+export const btn = `rounded-0 border-none text-white text-center decoration-none cursor-pointer py-1 align-mid hover:op-80`;
+
+export interface Project {
 	id: string;
 	name: string;
 	change?: Change;
@@ -13,12 +23,16 @@ interface Change {
 	projectId: number;
 }
 
+const [isAuth, setIsAuth] = createSignal(false);
+
 export const [projects, { mutate: mutateProjects, refetch: refetchProjects }] =
 	createResource<Project[]>(async () => {
-		const response = await fetch("http://localhost:3001/project", {
-			method: "GET",
-		});
-		return (await response.json()).projects;
+		if (isAuth()) {
+			const response = await fetch("http://localhost:4000/project", {
+				method: "GET",
+			});
+			return (await response.json()).projects;
+		}
 	});
 
 const onSend = ({ projectId }: { projectId: string }) => {
@@ -35,8 +49,12 @@ const onReceive = ({ projectId }: { projectId: string }) => {
 	});
 };
 
-const createProject = async ({ name }: { name: string }): Promise<boolean> => {
-	const reponse = await fetch("http://localhost:3001/project", {
+export const createProject = async ({
+	name,
+}: {
+	name: string;
+}): Promise<boolean> => {
+	const reponse = await fetch("http://localhost:4000/project", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -48,14 +66,26 @@ const createProject = async ({ name }: { name: string }): Promise<boolean> => {
 	return (await reponse.json()).success;
 };
 
-const [targetProject, setTargetProject] = createSignal<Project>();
+export const [targetProject, setTargetProject] = createSignal<Project>();
 
 function App() {
-	const [isAuth, setIsAuth] = createSignal(false);
-
 	const onChooseProject = (chosenProject: Project) => {
 		setTargetProject(chosenProject);
 	};
+
+	createEffect(() => {
+		const callback = (event: { data: { command: string } }) => {
+			const message = event.data;
+
+			switch (message.command) {
+				case "getAccessToken":
+					setIsAuth(true);
+					break;
+			}
+		};
+		window.addEventListener("message", callback);
+		onCleanup(() => window.removeEventListener("message", callback));
+	});
 
 	return (
 		<Show
@@ -64,8 +94,9 @@ function App() {
 				<div class="h-96 flex flex-col items-center justify-items-center my-12">
 					<a
 						class={`bg-vsgreen ${btn} py-2 px-6 hover:text-white`}
-						href={"http://localhost:4000/oauth/github/authorize"}
-						onClick={() => setIsAuth(true)}
+						href={
+							"http://localhost:4000/login/oauth/github/authorize"
+						}
 					>
 						LOGIN WITH GITHUB
 					</a>
@@ -120,69 +151,6 @@ function App() {
 				</div>
 			</div>
 		</Show>
-	);
-}
-
-const btn = `rounded-0 border-none text-white text-center decoration-none cursor-pointer py-1 align-mid hover:op-80`;
-
-interface ProjectProps {
-	onChoose: (chosenProject: Project) => void;
-}
-
-function Projects(props: ProjectProps) {
-	const [projectName, setProjectName] = createSignal("");
-
-	const handleProjectCreate = async () => {
-		await createProject({ name: projectName() });
-		refetchProjects();
-		setProjectName("");
-	};
-
-	return (
-		<div class="py-2">
-			<div>
-				<label for="projectName">
-					<input
-						onInput={(e) => setProjectName(e.currentTarget.value)}
-						type="text"
-					/>
-				</label>
-				<button onClick={handleProjectCreate}>Create project</button>
-			</div>
-
-			<p class="my-0">Choose a project</p>
-
-			<div class="flex flex-col mt-2">
-				<For each={projects()} fallback={<span>Empty</span>}>
-					{(project) => (
-						<div class="flex justify-between my-1">
-							<span
-								class={
-									project.id === targetProject()?.id
-										? "font-bold"
-										: ""
-								}
-							>
-								{`${project.name} (${project.id}`})
-							</span>
-
-							<div class="flex">
-								<button
-									class={`mr-1 bg-vsgreen ${btn} ${
-										project.id === targetProject()?.id
-											? "op-80"
-											: ""
-									}`}
-									onClick={() => props.onChoose(project)}
-								>
-									Choose
-								</button>
-							</div>
-						</div>
-					)}
-				</For>
-			</div>
-		</div>
 	);
 }
 

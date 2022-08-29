@@ -26,15 +26,16 @@ export async function authRoutes(
 		"/login/oauth/github/callback",
 		{},
 		async function (request, reply) {
+			if (new URLSearchParams(request.url).get("error_description")) {
+				reply.redirect("vscode://frixaco.codesync-extension/callback");
+			}
 			const authData =
 				await fastify.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(
 					request,
 				);
 
 			if ("error" in authData.token) {
-				reply
-					.type("text/html")
-					.send("<p>FAILURE. Please try again.</p>");
+				reply.redirect("vscode://frixaco.codesync-extension/callback");
 			}
 
 			const githubUser: {
@@ -73,21 +74,15 @@ export async function authRoutes(
 
 			console.log("USER CREATED", newUser.id);
 
-			reply.setCookie("gh-auth", authData.token.access_token, {
-				httpOnly: true,
-				secure: true,
-			});
+			// reply.setCookie("gh-auth", authData.token.access_token, {
+			// 	httpOnly: true,
+			// 	secure: true,
+			// });
 			console.log("AUTH DATA", authData);
 
-			reply
-				.type("text/html")
-				.send(
-					`<p>SUCCESS. User ${
-						githubUser.login
-					} has been created and authorized.\nTOKEN OBJECT: ${JSON.stringify(
-						authData,
-					)}</p>`,
-				);
+			reply.redirect(
+				`vscode://frixaco.codesync-extension/callback?access_token=${authData.token.access_token}`,
+			);
 		},
 	);
 }

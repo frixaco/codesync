@@ -1,3 +1,4 @@
+import fastifyOauth2 from "@fastify/oauth2";
 import dotenv from "dotenv";
 import fastify, {
 	FastifyInstance,
@@ -5,12 +6,11 @@ import fastify, {
 	FastifyRequest,
 } from "fastify";
 import fp, { PluginMetadata } from "fastify-plugin";
-import fastifyOauth2 from "@fastify/oauth2";
 
-import prismaDb from "./db";
-import { authRoutes, privateRoutes } from "./routes";
 import { FastifyCookieOptions } from "@fastify/cookie";
 import got from "got";
+import prismaDb from "./db";
+import { authRoutes, privateRoutes } from "./routes";
 
 dotenv.config();
 

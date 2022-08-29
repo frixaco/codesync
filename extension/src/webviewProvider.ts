@@ -7,12 +7,41 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 
 	constructor(private readonly _extensionUri: vscode.Uri) {}
 
+	public setupOAuthCallbackHandler() {
+		const webview = this._view?.webview || { postMessage: () => undefined };
+		vscode.window.registerUriHandler({
+			handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
+				if (uri.path === "/callback") {
+					const queryParams = new URLSearchParams(uri.query);
+					if (queryParams.get("access_token")) {
+						const accessToken = queryParams.get("access_token");
+						vscode.commands.executeCommand(
+							"codesync.saveAccessToken",
+							{ accessToken },
+						);
+
+						webview.postMessage({
+							command: "getAccessToken",
+						});
+					} else {
+						vscode.commands.executeCommand(
+							"codesync.saveAccessToken",
+							{ accessToken: null },
+						);
+					}
+				}
+			},
+		});
+	}
+
 	public resolveWebviewView(
 		webviewView: vscode.WebviewView,
 		_context: vscode.WebviewViewResolveContext,
 		_token: vscode.CancellationToken,
 	) {
 		this._view = webviewView;
+
+		this.setupOAuthCallbackHandler();
 
 		webviewView.webview.options = {
 			enableScripts: true,
@@ -24,7 +53,7 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-		webviewView.webview.onDidReceiveMessage((data) => {
+		webviewView.webview.onDidReceiveMessage(async (data) => {
 			switch (data.type) {
 				case "send": {
 					vscode.commands.executeCommand("codesync.sendChanges", {
@@ -38,6 +67,15 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 					});
 					break;
 				}
+				case "saveAccessToken": {
+					vscode.commands.executeCommand("codesync.saveAccessToken", {
+						accessToken: data.accessToken,
+					});
+					break;
+				}
+				default:
+					throw new Error("Unknown postMessage type");
+					break;
 			}
 		});
 	}
