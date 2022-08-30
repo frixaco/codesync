@@ -1,17 +1,47 @@
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import got from "got";
 import prismaDb from "./db";
+import { GithubToken, GithubUser } from "./types";
+
+export async function getGithubUserInfo(
+	accessToken: string,
+): Promise<GithubUser | null> {
+	const githubUser = await got
+		.get("https://api.github.com/user", {
+			headers: {
+				Authorization: `token ${accessToken}`,
+			},
+		})
+		.json<GithubUser>();
+
+	return "login" in githubUser ? githubUser : null;
+}
+
+export async function refreshAccessToken(
+	refreshToken: string,
+): Promise<GithubToken | null> {
+	const newToken = await got
+		.post("https://github.com/login/oauth/access_token", {
+			searchParams: new URLSearchParams({
+				refresh_token: refreshToken,
+				grant_type: "refresh_token",
+				client_id: process.env.GITHUB_CLIENT_SECRET,
+				client_secret: process.env.GITHUB_CLIENT_SECRET,
+			}),
+		})
+		.json<GithubToken>();
+	return "access_token" in newToken ? newToken : null;
+}
 
 export async function authRoutes(
 	fastify: FastifyInstance,
 	options: FastifyPluginOptions,
 ) {
 	/**
-	 * Redirect user to authorize using GitHub OAuth
+	 * Redirect user to authorize using GitHub
 	 */
 	fastify.get(
 		"/login/oauth/github/authorize",
-		{},
 		async function (request, reply) {
 			const authorizationEndpoint =
 				fastify.githubOAuth2.generateAuthorizationUri(request);
@@ -20,51 +50,106 @@ export async function authRoutes(
 	);
 
 	/**
+	 * Refresh user auth token.
+	 * Send refreshToken in Authorization header.
+	 * Get new accessToken in Authorization header and refreshToken in response body.
+	 */
+	fastify.get("/login/oauth/github/refresh", async function (request, reply) {
+		try {
+			const { authorization } = request.headers;
+			const refreshToken = authorization || "";
+
+			const newToken = await refreshAccessToken(refreshToken);
+			if (!newToken) {
+				reply.send({
+					success: false,
+					statusCode: 401,
+					errorMessage: "Invalid refresh token.",
+				});
+				return;
+			}
+
+			const githubUser = await getGithubUserInfo(newToken.access_token);
+			if (!githubUser) {
+				reply.send({
+					success: false,
+					statusCode: 401,
+					errorMessage: "Not a Github user.",
+				});
+			}
+
+			await prismaDb.user.update({
+				where: {
+					githubId: githubUser?.id,
+				},
+				data: {
+					refreshToken: newToken.refresh_token,
+				},
+			});
+
+			reply.header("Authorization", newToken.access_token);
+			reply.send({
+				success: true,
+				refreshToken: newToken.refresh_token,
+			});
+		} catch (error) {
+			reply.send({
+				success: false,
+				statusCode: 401,
+				errorMessage:
+					"Couldn't check access token. Make sure Authorization header is set to valid refresh token.",
+			});
+		}
+	});
+
+	/**
 	 * Finish GitHub OAuth process
 	 */
-	fastify.get(
-		"/login/oauth/github/callback",
-		{},
-		async function (request, reply) {
+	fastify.get<{
+		Querystring: {
+			code: string;
+			state: string;
+		};
+	}>("/login/oauth/github/callback", async function (request, reply) {
+		try {
 			if (new URLSearchParams(request.url).get("error_description")) {
 				reply.redirect("vscode://frixaco.codesync-extension/callback");
+				return;
 			}
+
 			const authData =
 				await fastify.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(
 					request,
 				);
-
 			if ("error" in authData.token) {
 				reply.redirect("vscode://frixaco.codesync-extension/callback");
+				return;
 			}
 
-			const githubUser: {
-				id: number;
-				login: string;
-			} = await got
-				.get("https://api.github.com/user", {
-					headers: {
-						Authorization: `token ${authData.token.access_token}`,
-					},
-				})
-				.json();
+			const githubUser = await getGithubUserInfo(
+				authData.token.access_token,
+			);
+			if (!githubUser) {
+				reply.redirect("vscode://frixaco.codesync-extension/callback");
+				return;
+			}
 
-			let newUser = await prismaDb.user.findUnique({
+			const existingUser = await prismaDb.user.findUnique({
 				where: {
 					githubId: githubUser.id,
 				},
 			});
-			if (!newUser) {
-				newUser = await prismaDb.user.create({
+			if (!existingUser) {
+				await prismaDb.user.create({
 					data: {
 						githubId: githubUser.id,
 						refreshToken: authData.token.refresh_token || "",
 					},
 				});
 			} else {
-				newUser = await prismaDb.user.update({
+				await prismaDb.user.update({
 					where: {
-						id: newUser.id,
+						id: existingUser.id,
 					},
 					data: {
 						refreshToken: authData.token.refresh_token || "",
@@ -72,19 +157,17 @@ export async function authRoutes(
 				});
 			}
 
-			console.log("USER CREATED", newUser.id);
-
-			// reply.setCookie("gh-auth", authData.token.access_token, {
-			// 	httpOnly: true,
-			// 	secure: true,
-			// });
-			console.log("AUTH DATA", authData);
-
 			reply.redirect(
-				`vscode://frixaco.codesync-extension/callback?access_token=${authData.token.access_token}`,
+				`vscode://frixaco.codesync-extension/callback?access_token=${authData.token.access_token}&refresh_token=${authData.token.refresh_token}`,
 			);
-		},
-	);
+		} catch (error) {
+			reply.send({
+				success: false,
+				statusCode: 500,
+				errorMessage: "Failed to handle Github OAuth callback redirect",
+			});
+		}
+	});
 }
 
 export async function privateRoutes(
@@ -95,69 +178,76 @@ export async function privateRoutes(
 	 * Create/Update project
 	 */
 	fastify.post<{
-		Body: { projectId?: number; name: string; ownerId: string };
+		Body: { projectId?: number; name: string };
 	}>(
 		"/project",
 		{
 			preHandler: fastify.auth([fastify.verifyUser]),
 		},
 		async function (request, reply) {
-			const { projectId, name, ownerId } = request.body;
+			try {
+				const { projectId, name } = request.body;
 
-			let project;
-
-			if (projectId) {
-				project = await prismaDb.project.update({
-					where: {
-						id: projectId,
-					},
-					data: {
-						name,
-						owner: {
-							connect: {
-								id: +ownerId,
+				if (projectId) {
+					await prismaDb.project.update({
+						where: {
+							id: projectId,
+						},
+						data: {
+							name,
+						},
+					});
+				} else {
+					await prismaDb.project.create({
+						data: {
+							name,
+							owner: {
+								connect: {
+									id: request.user.id,
+								},
 							},
 						},
-					},
-				});
-			} else {
-				project = await prismaDb.project.create({
-					data: {
-						name,
-						owner: {
-							connect: {
-								id: +ownerId,
-							},
-						},
-					},
+					});
+				}
+
+				reply.send({ success: true });
+			} catch (error) {
+				reply.send({
+					success: false,
+					statusCode: 500,
+					errorMessage: "Couldn't update or create project.",
 				});
 			}
-
-			reply.send({ success: true, projectId: project.id });
 		},
 	);
 
 	/**
 	 * Get user projects
 	 */
-	fastify.get<{ Querystring: { ownerId: string; accessToken: string } }>(
+	fastify.get<{ Querystring: { accessToken: string } }>(
 		"/project",
 		{
 			preHandler: fastify.auth([fastify.verifyUser]),
 		},
 		async function (request, reply) {
-			const { ownerId } = request.query;
+			try {
+				const user = await prismaDb.user.findUnique({
+					where: {
+						id: request.user.id,
+					},
+					include: {
+						projects: true,
+					},
+				});
 
-			const user = await prismaDb.user.findUnique({
-				where: {
-					id: Number(ownerId),
-				},
-				include: {
-					projects: true,
-				},
-			});
-
-			reply.send({ success: true, projects: user?.projects || [] });
+				reply.send({ success: true, projects: user?.projects || [] });
+			} catch (error) {
+				reply.send({
+					success: false,
+					statusCode: 500,
+					errorMessage: "Couldn't fetch user projects",
+				});
+			}
 		},
 	);
 
@@ -165,58 +255,54 @@ export async function privateRoutes(
 	 * Save project diff
 	 */
 	fastify.post<{
-		Body: { diff: string; projectId: string; authorId: string };
+		Body: { diff: string; projectId: number };
 	}>(
 		"/change",
 		{
 			preHandler: fastify.auth([fastify.verifyUser]),
 		},
 		async function (request, reply) {
-			const { diff, projectId, authorId } = request.body;
+			try {
+				const { diff, projectId } = request.body;
 
-			const project = await prismaDb.project.findUnique({
-				where: {
-					id: +projectId,
-				},
-			});
-			if (!project) {
-				reply.send({
-					success: false,
-					errorMessage: "Project not found",
+				const project = await prismaDb.project.findUnique({
+					where: {
+						id: projectId,
+					},
 				});
-				return;
-			}
+				if (!project) {
+					reply.send({
+						success: false,
+						statusCode: 500,
+						errorMessage: "Project not found",
+					});
+					return;
+				}
 
-			const author = await prismaDb.user.findUnique({
-				where: {
-					id: +authorId,
-				},
-			});
-			if (!author) {
-				reply.send({
-					success: false,
-					errorMessage: "Author not found",
-				});
-				return;
-			}
-
-			const change = await prismaDb.change.create({
-				data: {
-					diff,
-					author: {
-						connect: {
-							id: +authorId,
+				await prismaDb.change.create({
+					data: {
+						diff,
+						author: {
+							connect: {
+								id: request.user.id,
+							},
+						},
+						project: {
+							connect: {
+								id: project.id,
+							},
 						},
 					},
-					project: {
-						connect: {
-							id: project.id,
-						},
-					},
-				},
-			});
+				});
 
-			reply.send({ success: true, changeId: change.id });
+				reply.send({ success: true });
+			} catch (error) {
+				reply.send({
+					success: false,
+					statusCode: 500,
+					errorMessage: "Failed to create diff for a project",
+				});
+			}
 		},
 	);
 
@@ -229,23 +315,32 @@ export async function privateRoutes(
 			preHandler: fastify.auth([fastify.verifyUser]),
 		},
 		async function (request, reply) {
-			const { projectId } = request.query;
+			try {
+				const { projectId } = request.query;
 
-			const change = await prismaDb.change.findUnique({
-				where: {
-					projectId: +projectId,
-				},
-			});
+				const change = await prismaDb.change.findUnique({
+					where: {
+						projectId: +projectId,
+					},
+				});
 
-			if (!change) {
+				if (!change) {
+					reply.send({
+						success: false,
+						statusCode: 500,
+						errorMessage: "Project changes not found",
+					});
+					return;
+				}
+
+				reply.send({ success: true, diff: change.diff });
+			} catch (error) {
 				reply.send({
 					success: false,
-					errorMessage: "Project changes not found",
+					statusCode: 500,
+					errorMessage: "Failed to fetch project diff",
 				});
-				return;
 			}
-
-			reply.send({ success: true, diff: change.diff });
 		},
 	);
 }

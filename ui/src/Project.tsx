@@ -16,8 +16,8 @@ export function Projects(props: ProjectProps) {
 
 	const handleProjectCreate = async () => {
 		await createProject({ name: projectName() });
-		refetchProjects();
 		setProjectName("");
+		refetchProjects();
 	};
 
 	return (

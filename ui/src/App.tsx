@@ -3,6 +3,7 @@ import {
 	createResource,
 	createSignal,
 	onCleanup,
+	onMount,
 	Show,
 } from "solid-js";
 import "uno.css";
@@ -23,13 +24,24 @@ interface Change {
 	projectId: number;
 }
 
-const [isAuth, setIsAuth] = createSignal(false);
+const [auth, setAuth] = createSignal<{
+	isAuth: boolean;
+	refreshToken: string;
+	accessToken: string;
+}>({
+	isAuth: false,
+	refreshToken: "",
+	accessToken: "",
+});
 
 export const [projects, { mutate: mutateProjects, refetch: refetchProjects }] =
 	createResource<Project[]>(async () => {
-		if (isAuth()) {
+		if (auth().isAuth) {
 			const response = await fetch("http://localhost:4000/project", {
 				method: "GET",
+				headers: new Headers({
+					authorization: auth().accessToken,
+				}),
 			});
 			return (await response.json()).projects;
 		}
@@ -50,18 +62,25 @@ const onReceive = ({ projectId }: { projectId: string }) => {
 };
 
 export const createProject = async ({
+	projectId,
 	name,
 }: {
+	projectId?: number;
 	name: string;
 }): Promise<boolean> => {
 	const reponse = await fetch("http://localhost:4000/project", {
 		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({
-			name,
+		headers: new Headers({
+			authorization: auth().accessToken,
 		}),
+		body: JSON.stringify(
+			projectId
+				? {
+						projectId,
+						name,
+				  }
+				: { name },
+		),
 	});
 	return (await reponse.json()).success;
 };
@@ -73,13 +92,27 @@ function App() {
 		setTargetProject(chosenProject);
 	};
 
-	createEffect(() => {
-		const callback = (event: { data: { command: string } }) => {
-			const message = event.data;
+	onMount(() => {
+		vscodeApi.postMessage({
+			type: "triggerGetAuth",
+		});
+	});
 
-			switch (message.command) {
-				case "getAccessToken":
-					setIsAuth(true);
+	createEffect(() => {
+		const callback = (event: {
+			data: {
+				command: string;
+				isAuth: boolean;
+				refreshToken: string;
+				accessToken: string;
+			};
+		}) => {
+			const message = event.data;
+			const { command, ...payload } = message;
+
+			switch (command) {
+				case "authorize":
+					setAuth(payload);
 					break;
 			}
 		};
@@ -89,7 +122,7 @@ function App() {
 
 	return (
 		<Show
-			when={isAuth()}
+			when={auth().isAuth}
 			fallback={
 				<div class="h-96 flex flex-col items-center justify-items-center my-12">
 					<a

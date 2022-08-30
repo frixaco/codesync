@@ -8,26 +8,40 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 	constructor(private readonly _extensionUri: vscode.Uri) {}
 
 	public setupOAuthCallbackHandler() {
-		const webview = this._view?.webview || { postMessage: () => undefined };
+		const webview = this._view?.webview;
+
+		if (!webview) {
+			throw new Error("Webview is undefined");
+		}
+
 		vscode.window.registerUriHandler({
 			handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
 				if (uri.path === "/callback") {
 					const queryParams = new URLSearchParams(uri.query);
-					if (queryParams.get("access_token")) {
-						const accessToken = queryParams.get("access_token");
-						vscode.commands.executeCommand(
-							"codesync.saveAccessToken",
-							{ accessToken },
-						);
+					const accessToken = queryParams.get("access_token");
+					const refreshToken = queryParams.get("refresh_token");
+					if (accessToken) {
+						vscode.commands.executeCommand("codesync.persistAuth", {
+							accessToken,
+							refreshToken,
+						});
 
+						const isAuth =
+							accessToken &&
+							accessToken.length > 0 &&
+							refreshToken &&
+							refreshToken.length > 0;
 						webview.postMessage({
-							command: "getAccessToken",
+							command: "authorize",
+							isAuth,
+							refreshToken,
+							accessToken,
 						});
 					} else {
-						vscode.commands.executeCommand(
-							"codesync.saveAccessToken",
-							{ accessToken: null },
-						);
+						vscode.commands.executeCommand("codesync.persistAuth", {
+							accessToken: "",
+							refreshToken: "",
+						});
 					}
 				}
 			},
@@ -67,9 +81,25 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 					});
 					break;
 				}
-				case "saveAccessToken": {
-					vscode.commands.executeCommand("codesync.saveAccessToken", {
+				case "persistAuth": {
+					vscode.commands.executeCommand("codesync.persistAuth", {
 						accessToken: data.accessToken,
+						refreshToken: data.refreshToken,
+					});
+					break;
+				}
+				case "triggerGetAuth": {
+					vscode.commands.executeCommand("codesync.getAuth", {
+						updateWebview: (payload: {
+							isAuth: boolean;
+							refreshToken: string;
+							accessToken: string;
+						}) => {
+							webviewView.webview.postMessage({
+								command: "authorize",
+								...payload,
+							});
+						},
 					});
 					break;
 				}

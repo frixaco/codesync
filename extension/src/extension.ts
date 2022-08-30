@@ -196,12 +196,42 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
-			"codesync.saveAccessToken",
-			async ({ accessToken }) => {
+			"codesync.persistAuth",
+			async ({ accessToken, refreshToken }) => {
 				await context.workspaceState.update(
 					"codesync.accessToken",
 					accessToken,
 				);
+				await context.workspaceState.update(
+					"codesync.refreshToken",
+					refreshToken,
+				);
+			},
+		),
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			"codesync.getAuth",
+			async ({ updateWebview }) => {
+				const accessToken = context.workspaceState.get<string>(
+					"codesync.accessToken",
+				);
+				const refreshToken = context.workspaceState.get<string>(
+					"codesync.refreshToken",
+				);
+
+				const isAuth =
+					accessToken &&
+					accessToken.length > 0 &&
+					refreshToken &&
+					refreshToken.length > 0;
+
+				updateWebview({
+					accessToken,
+					refreshToken,
+					isAuth,
+				});
 			},
 		),
 	);
