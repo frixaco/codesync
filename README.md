@@ -10,8 +10,8 @@ So I deciced to make this extension which will, hopefully, solve this problem of
 ## Local developement
 
 -   Create `.env` file in `server/` and set `DATABASE_URL`
--   `pnpm install` in root, `server/` and `solid/`
--   `pnpm build:watch` in root, `pnpm dev` in `server/` and `pnpm build:watch` in `solid/`
+-   `pnpm install` in root, `server/` and `ui/`
+-   `pnpm build:watch` in root, `pnpm dev` in `server/` and `pnpm build:watch` in `ui/`
 
 ## Features
 

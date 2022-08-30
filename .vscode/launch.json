@@ -1,0 +1,38 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Run",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}/extension"]
+			// "debugWebviews": true,
+			// "rendererDebugOptions": {
+			// 	"pauseForSourceMap": true,
+			// 	"sourceMapRenames": true,
+			// 	"sourceMaps": true,
+			// 	// "urlFilter": "*eamodio.gitlens*",
+			// 	"webRoot": "${workspaceFolder}/src/webviews/apps"
+			// },
+			// "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+			// "presentation": {
+			// 	"group": "2_run",
+			// 	"order": 1
+			// },
+			// "pauseForSourceMap": true,
+			// "skipFiles": [
+			// 	"<node_internals>/**",
+			// 	"**/node_modules/**",
+			// 	"**/resources/app/out/vs/**"
+			// ],
+			// "smartStep": true,
+			// "sourceMapRenames": true,
+			// "sourceMaps": true,
+			// "trace": true
+		}
+	]
+}

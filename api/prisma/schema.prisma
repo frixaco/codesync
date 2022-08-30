@@ -1,0 +1,45 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialIntegrity"]
+}
+
+datasource db {
+  provider             = "mysql"
+  url                  = env("DATABASE_URL")
+  referentialIntegrity = "prisma"
+}
+
+model User {
+  id           Int    @id @default(autoincrement())
+  githubId     Int    @unique
+  refreshToken String
+
+  changes  Change[]
+  projects Project[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id      Int    @id @default(autoincrement())
+  name    String @unique
+  owner   User   @relation(fields: [ownerId], references: [id])
+  ownerId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  change    Change?
+}
+
+model Change {
+  id        Int     @id @default(autoincrement())
+  diff      String  @db.Text // JSON stringified { staged: '...', unstaged: '...' }
+  author    User    @relation(fields: [authorId], references: [id])
+  authorId  Int
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId Int     @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
