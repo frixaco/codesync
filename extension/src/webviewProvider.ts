@@ -70,37 +70,49 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 		webviewView.webview.onDidReceiveMessage(async (data) => {
 			switch (data.type) {
 				case "send": {
-					vscode.commands.executeCommand("codesync.sendChanges", {
-						projectId: data.projectId,
-					});
+					await vscode.commands.executeCommand(
+						"codesync.sendChanges",
+						{
+							projectId: data.projectId,
+						},
+					);
 					break;
 				}
 				case "receive": {
-					vscode.commands.executeCommand("codesync.applyChanges", {
-						projectId: data.projectId,
-					});
+					await vscode.commands.executeCommand(
+						"codesync.applyChanges",
+						{
+							projectId: data.projectId,
+						},
+					);
 					break;
 				}
 				case "persistAuth": {
-					vscode.commands.executeCommand("codesync.persistAuth", {
-						accessToken: data.accessToken,
-						refreshToken: data.refreshToken,
-					});
+					await vscode.commands.executeCommand(
+						"codesync.persistAuth",
+						{
+							accessToken: data.accessToken,
+							refreshToken: data.refreshToken,
+						},
+					);
 					break;
 				}
 				case "triggerGetAuth": {
-					vscode.commands.executeCommand("codesync.getAuth", {
-						updateWebview: (payload: {
-							isAuth: boolean;
-							refreshToken: string;
-							accessToken: string;
-						}) => {
-							webviewView.webview.postMessage({
-								command: "authorize",
-								...payload,
-							});
+					await vscode.commands.executeCommand(
+						"codesync.refreshAuth",
+						{
+							updateWebview: (payload: {
+								isAuth: boolean;
+								refreshToken: string;
+								accessToken: string;
+							}) => {
+								webviewView.webview.postMessage({
+									command: "authorize",
+									...payload,
+								});
+							},
 						},
-					});
+					);
 					break;
 				}
 				default:

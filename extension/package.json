@@ -66,5 +66,8 @@
 	},
 	"engines": {
 		"vscode": "^1.69.1"
+	},
+	"dependencies": {
+		"got": "11.x"
 	}
 }

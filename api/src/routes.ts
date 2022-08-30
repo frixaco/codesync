@@ -20,17 +20,21 @@ export async function getGithubUserInfo(
 export async function refreshAccessToken(
 	refreshToken: string,
 ): Promise<GithubToken | null> {
-	const newToken = await got
-		.post("https://github.com/login/oauth/access_token", {
-			searchParams: new URLSearchParams({
-				refresh_token: refreshToken,
-				grant_type: "refresh_token",
-				client_id: process.env.GITHUB_CLIENT_SECRET,
-				client_secret: process.env.GITHUB_CLIENT_SECRET,
-			}),
-		})
-		.json<GithubToken>();
-	return "access_token" in newToken ? newToken : null;
+	try {
+		const newToken = await got
+			.post("https://github.com/login/oauth/access_token", {
+				searchParams: new URLSearchParams({
+					refresh_token: refreshToken,
+					grant_type: "refresh_token",
+					client_id: process.env.GITHUB_CLIENT_ID,
+					client_secret: process.env.GITHUB_CLIENT_SECRET,
+				}),
+			})
+			.json<GithubToken>();
+		return "access_token" in newToken ? newToken : null;
+	} catch (error) {
+		return null;
+	}
 }
 
 export async function authRoutes(
@@ -87,9 +91,10 @@ export async function authRoutes(
 				},
 			});
 
-			reply.header("Authorization", newToken.access_token);
+			reply.header("authorization", newToken.access_token);
 			reply.send({
 				success: true,
+				accessToken: newToken.access_token,
 				refreshToken: newToken.refresh_token,
 			});
 		} catch (error) {

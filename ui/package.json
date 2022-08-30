@@ -10,6 +10,7 @@
 		"serve": "vite preview"
 	},
 	"dependencies": {
+		"got": "11.x",
 		"solid-js": "^1.4.8"
 	},
 	"devDependencies": {

@@ -14,3 +14,4 @@ tsconfig.lsif.json
 .eslintcache
 yarn.lock
 package-lock.json
+*.pem

@@ -10,6 +10,7 @@ import fp, { PluginMetadata } from "fastify-plugin";
 import { FastifyCookieOptions } from "@fastify/cookie";
 import prismaDb from "./db";
 import { authRoutes, getGithubUserInfo, privateRoutes } from "./routes";
+import { GithubUser } from "./types";
 
 dotenv.config();
 
@@ -20,7 +21,7 @@ const app = fastify({
 		},
 	},
 });
-app.decorateRequest("user", {});
+app.decorateRequest("user", {} as GithubUser);
 
 app.register(import("@fastify/cors"));
 
@@ -56,8 +57,6 @@ app.register(
 			) {
 				const { authorization } = request.headers;
 				const accessToken = authorization || "";
-
-				this.log.info(accessToken, "REQUEST AUTHORIZATION HEADER");
 
 				const githubUser = await getGithubUserInfo(accessToken);
 				if (!githubUser) {

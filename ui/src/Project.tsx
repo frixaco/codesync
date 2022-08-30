@@ -15,9 +15,11 @@ export function Projects(props: ProjectProps) {
 	const [projectName, setProjectName] = createSignal("");
 
 	const handleProjectCreate = async () => {
-		await createProject({ name: projectName() });
-		setProjectName("");
-		refetchProjects();
+		const success = await createProject({ name: projectName() });
+		if (success) {
+			setProjectName("");
+			await refetchProjects();
+		}
 	};
 
 	return (

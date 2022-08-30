@@ -1,4 +1,5 @@
 import * as child_process from "child_process";
+import got from "got";
 import * as vscode from "vscode";
 import type { GitExtension } from "./git";
 import { CodesyncWebviewProvider } from "./webviewProvider";
@@ -81,15 +82,14 @@ export async function activate(context: vscode.ExtensionContext) {
 				diff.staged = (await repo?.diff(true)) || "";
 				diff.unstaged = (await repo?.diff()) || "";
 
-				const response = await (
-					await fetch("http://localhost:3001/change", {
-						method: "POST",
+				const { data: response } = await got
+					.post("http://localhost:4000/change", {
 						body: JSON.stringify({
 							diff: JSON.stringify(diff),
 							projectId,
 						}),
 					})
-				).json();
+					.json();
 
 				if (response.data.success) {
 					vscode.window.showInformationMessage(
@@ -129,14 +129,22 @@ export async function activate(context: vscode.ExtensionContext) {
 				const unstagedPatch = `${currentDir[0].uri.fsPath}/unstaged.patch`;
 
 				try {
-					const retrievedChanges = await (
-						await fetch(
-							"http://localhost:3001/change" +
-								+new URLSearchParams({
+					const { data: retrievedChanges } = await got
+						.get(
+							"http://localhost:4000/change" +
+								new URLSearchParams({
 									projectId,
 								}),
+							{
+								headers: {
+									authorization:
+										context.workspaceState.get<string>(
+											"codesync.accessToken",
+										),
+								},
+							},
 						)
-					).json();
+						.json();
 					if (!retrievedChanges.data.success) {
 						throw new Error();
 					}
@@ -212,25 +220,56 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
-			"codesync.getAuth",
+			"codesync.refreshAuth",
 			async ({ updateWebview }) => {
-				const accessToken = context.workspaceState.get<string>(
+				const _accessToken = context.workspaceState.get<string>(
 					"codesync.accessToken",
 				);
+				console.log("workspace keys", context.workspaceState.keys());
+
 				const refreshToken = context.workspaceState.get<string>(
 					"codesync.refreshToken",
 				);
 
-				const isAuth =
-					accessToken &&
-					accessToken.length > 0 &&
-					refreshToken &&
-					refreshToken.length > 0;
+				if (!refreshToken) {
+					updateWebview({
+						accessToken: "",
+						refreshToken: "",
+						isAuth: false,
+					});
+					return;
+				}
+
+				const tokens = await got
+					.get("http://localhost:4000/login/oauth/github/refresh", {
+						headers: {
+							authorization: refreshToken,
+						},
+					})
+					.json<{
+						success: boolean;
+						accessToken: string;
+						refreshToken: string;
+					}>();
+
+				vscode.commands.executeCommand("codesync.persistAuth", {
+					accessToken: tokens.accessToken,
+					refreshToken: tokens.refreshToken,
+				});
+
+				if (tokens.success) {
+					updateWebview({
+						accessToken: tokens.accessToken,
+						refreshToken: tokens.refreshToken,
+						isAuth: true,
+					});
+					return;
+				}
 
 				updateWebview({
-					accessToken,
-					refreshToken,
-					isAuth,
+					accessToken: "",
+					refreshToken: "",
+					isAuth: false,
 				});
 			},
 		),

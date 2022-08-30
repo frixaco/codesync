@@ -45,12 +45,14 @@ export const [projects, { mutate: mutateProjects, refetch: refetchProjects }] =
 			});
 			return (await response.json()).projects;
 		}
+		return [];
 	});
 
 const onSend = ({ projectId }: { projectId: string }) => {
 	vscodeApi.postMessage({
 		type: "send",
 		projectId,
+		// diff,
 	});
 };
 
@@ -58,6 +60,7 @@ const onReceive = ({ projectId }: { projectId: string }) => {
 	vscodeApi.postMessage({
 		type: "receive",
 		projectId,
+		// diff,
 	});
 };
 
@@ -70,17 +73,16 @@ export const createProject = async ({
 }): Promise<boolean> => {
 	const reponse = await fetch("http://localhost:4000/project", {
 		method: "POST",
-		headers: new Headers({
-			authorization: auth().accessToken,
-		}),
-		body: JSON.stringify(
-			projectId
-				? {
-						projectId,
-						name,
-				  }
-				: { name },
-		),
+		headers: {
+			"Content-Type": "application/json",
+			"authorization": auth().accessToken,
+		},
+		body: projectId
+			? JSON.stringify({
+					projectId,
+					name,
+			  })
+			: JSON.stringify({ name }),
 	});
 	return (await reponse.json()).success;
 };
@@ -113,6 +115,7 @@ function App() {
 			switch (command) {
 				case "authorize":
 					setAuth(payload);
+					refetchProjects();
 					break;
 			}
 		};
