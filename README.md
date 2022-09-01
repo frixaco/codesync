@@ -9,12 +9,14 @@ So I deciced to make this extension which will, hopefully, solve this problem of
 
 ## Local developement
 
--   Create `.env` file in `server/` and set `DATABASE_URL`
--   `pnpm install` in root, `server/` and `ui/`
--   `pnpm build:watch` in root, `pnpm dev` in `server/` and `pnpm build:watch` in `ui/`
+-   Create `.env` file in `api/` folder. Example: [.env.example](./api/.env.example)
+-   `pnpm install` (or run `./clean-install.sh` for clean install)
+-   `pnpm dev` to run everything in dev mode
+-   Open [extension.ts](./extension/src/extension.ts) and press `F5`
 
 ## Features
 
+-   [x] Github OAuth for authorization/authentication
 -   [x] Synchronize staged, unstaged, tracked and untracked file changes
 -   [ ] Manage multiple projects
 -   [ ] Manual two-way synchronization
@@ -22,11 +24,11 @@ So I deciced to make this extension which will, hopefully, solve this problem of
 
 ## Requirements
 
--   Following should be same (otherwise, `git apply` will fail since indexes will be different):
-    -   project
-    -   branch
-    -   commit
--   VS Code: 1.69.0 or above (TODO: Lower)
+-   Following should be same (otherwise, `git apply` will fail since indexes will be different) (Working on removing this requirement, see [#8](https://github.com/frixaco/codesync/issues/8)):
+    -   git repo
+    -   git branch
+    -   git commit
+-   VS Code: 1.69.0 or above (TODO: Lower the version)
 
 ## Extension Settings
 
