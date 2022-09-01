@@ -1,37 +1,25 @@
-import { createSignal, For } from "solid-js";
-import {
-	btn,
-	createProject,
-	Project,
-	projects,
-	refetchProjects,
-	targetProject,
-} from "./App";
+import { For } from "solid-js";
+import { btn, Project, projects, setTargetProject, targetProject } from "./App";
 
 interface ProjectProps {
 	onChoose: (chosenProject: Project) => void;
 }
 export function Projects(props: ProjectProps) {
-	const [projectName, setProjectName] = createSignal("");
-
-	const handleProjectCreate = async () => {
-		const success = await createProject({ name: projectName() });
-		if (success) {
-			setProjectName("");
-			await refetchProjects();
-		}
-	};
+	const isChosen = (projectId: number) => projectId === targetProject()?.id;
 
 	return (
 		<div class="py-2">
-			<div>
-				<label for="projectName">
-					<input
-						onInput={(e) => setProjectName(e.currentTarget.value)}
-						type="text"
-					/>
-				</label>
-				<button onClick={handleProjectCreate}>Create project</button>
+			<div class="flex flex-col items-stretch mb-4">
+				<button
+					class={`bg-vsblue ${btn}`}
+					onClick={() => {
+						vscodeApi.postMessage({
+							type: "openCreateProjectInput",
+						});
+					}}
+				>
+					CREATE NEW PROJECT
+				</button>
 			</div>
 
 			<p class="my-0">Choose a project</p>
@@ -41,11 +29,7 @@ export function Projects(props: ProjectProps) {
 					{(project) => (
 						<div class="flex justify-between my-1">
 							<span
-								class={
-									project.id === targetProject()?.id
-										? "font-bold"
-										: ""
-								}
+								class={isChosen(project.id) ? "font-bold" : ""}
 							>
 								{`${project.name} (${project.id}`})
 							</span>
@@ -53,13 +37,15 @@ export function Projects(props: ProjectProps) {
 							<div class="flex">
 								<button
 									class={`mr-1 bg-vsgreen ${btn} ${
-										project.id === targetProject()?.id
-											? "op-80"
-											: ""
+										isChosen(project.id) ? "op-80" : ""
 									}`}
-									onClick={() => props.onChoose(project)}
+									onClick={() =>
+										!isChosen(project.id)
+											? props.onChoose(project)
+											: setTargetProject(null)
+									}
 								>
-									Choose
+									{isChosen(project.id) ? "Cancel" : "Choose"}
 								</button>
 							</div>
 						</div>

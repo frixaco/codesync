@@ -97,6 +97,25 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 					);
 					break;
 				}
+				case "openCreateProjectInput": {
+					const projectName = await vscode.window.showInputBox({
+						placeHolder: "Project name",
+					});
+					if (projectName) {
+						await vscode.commands.executeCommand(
+							"codesync.createNewProject",
+							{
+								projectName,
+								updateWebview: () => {
+									webviewView.webview.postMessage({
+										command: "refetchProjects",
+									});
+								},
+							},
+						);
+					}
+					break;
+				}
 				case "triggerGetAuth": {
 					await vscode.commands.executeCommand(
 						"codesync.refreshAuth",

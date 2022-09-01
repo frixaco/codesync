@@ -12,12 +12,12 @@ import { Projects } from "./Project";
 export const btn = `rounded-0 border-none text-white text-center decoration-none cursor-pointer py-1 align-mid hover:op-80`;
 
 export interface Project {
-	id: string;
+	id: number;
 	name: string;
 	change?: Change;
 }
 
-interface Change {
+export interface Change {
 	id: number;
 	diff: string;
 	project: Project;
@@ -39,55 +39,33 @@ export const [projects, { mutate: mutateProjects, refetch: refetchProjects }] =
 		if (auth().isAuth) {
 			const response = await fetch("http://localhost:4000/project", {
 				method: "GET",
-				headers: new Headers({
-					authorization: auth().accessToken,
-				}),
+				headers: {
+					"Content-Type": "application/json",
+					"authorization": auth().accessToken,
+				},
 			});
 			return (await response.json()).projects;
 		}
 		return [];
 	});
 
-const onSend = ({ projectId }: { projectId: string }) => {
+const onSend = ({ projectId }: { projectId: number }) => {
 	vscodeApi.postMessage({
 		type: "send",
 		projectId,
-		// diff,
 	});
 };
 
-const onReceive = ({ projectId }: { projectId: string }) => {
+const onReceive = ({ projectId }: { projectId: number }) => {
 	vscodeApi.postMessage({
 		type: "receive",
 		projectId,
-		// diff,
 	});
 };
 
-export const createProject = async ({
-	projectId,
-	name,
-}: {
-	projectId?: number;
-	name: string;
-}): Promise<boolean> => {
-	const reponse = await fetch("http://localhost:4000/project", {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			"authorization": auth().accessToken,
-		},
-		body: projectId
-			? JSON.stringify({
-					projectId,
-					name,
-			  })
-			: JSON.stringify({ name }),
-	});
-	return (await reponse.json()).success;
-};
-
-export const [targetProject, setTargetProject] = createSignal<Project>();
+export const [targetProject, setTargetProject] = createSignal<Project | null>(
+	null,
+);
 
 function App() {
 	const onChooseProject = (chosenProject: Project) => {
@@ -116,6 +94,12 @@ function App() {
 				case "authorize":
 					setAuth(payload);
 					refetchProjects();
+					break;
+				case "refetchProjects":
+					refetchProjects();
+					break;
+				default:
+					throw new Error(`Unknown command: ${command}`);
 					break;
 			}
 		};
@@ -157,7 +141,7 @@ function App() {
 								onClick={() =>
 									onSend({
 										projectId: targetProject()
-											?.id as string,
+											?.id as number,
 									})
 								}
 							>
@@ -167,12 +151,12 @@ function App() {
 							<button
 								title="Fetch changes for this "
 								class={`bg-vsblue ${btn} py-2 px-4`}
-								onClick={() =>
+								onClick={() => {
 									onReceive({
 										projectId: targetProject()
-											?.id as string,
-									})
-								}
+											?.id as number,
+									});
+								}}
 							>
 								FETCH CHANGES AND APPLY
 							</button>

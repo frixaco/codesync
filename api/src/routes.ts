@@ -183,7 +183,7 @@ export async function privateRoutes(
 	 * Create/Update project
 	 */
 	fastify.post<{
-		Body: { projectId?: number; name: string };
+		Body: { projectName: string };
 	}>(
 		"/project",
 		{
@@ -191,21 +191,26 @@ export async function privateRoutes(
 		},
 		async function (request, reply) {
 			try {
-				const { projectId, name } = request.body;
+				const { projectName } = request.body;
 
-				if (projectId) {
-					await prismaDb.project.update({
+				let project = await prismaDb.project.findUnique({
+					where: {
+						name: projectName,
+					},
+				});
+				if (project) {
+					project = await prismaDb.project.update({
 						where: {
-							id: projectId,
+							id: project.id,
 						},
 						data: {
-							name,
+							name: projectName,
 						},
 					});
 				} else {
-					await prismaDb.project.create({
+					project = await prismaDb.project.create({
 						data: {
-							name,
+							name: projectName,
 							owner: {
 								connect: {
 									id: request.user.id,
@@ -215,7 +220,7 @@ export async function privateRoutes(
 					});
 				}
 
-				reply.send({ success: true });
+				reply.send({ success: true, projectName: project.name });
 			} catch (error) {
 				reply.send({
 					success: false,
@@ -284,7 +289,7 @@ export async function privateRoutes(
 					return;
 				}
 
-				await prismaDb.change.create({
+				const newChange = await prismaDb.change.create({
 					data: {
 						diff,
 						author: {
@@ -300,12 +305,16 @@ export async function privateRoutes(
 					},
 				});
 
-				reply.send({ success: true });
+				reply.send({
+					success: true,
+					changeId: newChange.id,
+					projectId,
+				});
 			} catch (error) {
 				reply.send({
 					success: false,
 					statusCode: 500,
-					errorMessage: "Failed to create diff for a project",
+					errorMessage: "Failed to save project diff",
 				});
 			}
 		},
@@ -338,7 +347,11 @@ export async function privateRoutes(
 					return;
 				}
 
-				reply.send({ success: true, diff: change.diff });
+				reply.send({
+					success: true,
+					diff: change.diff,
+					changeId: change.id,
+				});
 			} catch (error) {
 				reply.send({
 					success: false,

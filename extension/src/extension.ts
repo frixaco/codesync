@@ -55,6 +55,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				}
 
 				const repo = await git?.init(repositories[0].rootUri);
+				// TODO: Try to remove dependency on Bash commands
 				const cmd_add_to_index = `git status --porcelain | sed -r 's/^.{3}//' | while read line; do git add -N $line; done`;
 				const cwd = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
@@ -64,8 +65,6 @@ export async function activate(context: vscode.ExtensionContext) {
 						cwd,
 					},
 					(error, _stdout, _stderr) => {
-						// TODO: move `| sed -r 's/^.{3}//' | while read line; do git add -N $line; done`
-						// to here, to remove dependency on bash commands
 						if (error) {
 							vscode.window.showErrorMessage(
 								"Failed to add to index.",
@@ -82,16 +81,25 @@ export async function activate(context: vscode.ExtensionContext) {
 				diff.staged = (await repo?.diff(true)) || "";
 				diff.unstaged = (await repo?.diff()) || "";
 
-				const { data: response } = await got
+				const response = await got
 					.post("http://localhost:4000/change", {
-						body: JSON.stringify({
+						headers: {
+							authorization: context.workspaceState.get<string>(
+								"codesync.accessToken",
+							),
+						},
+						json: {
 							diff: JSON.stringify(diff),
 							projectId,
-						}),
+						},
 					})
-					.json();
+					.json<{
+						success: boolean;
+						changeId: number;
+						projectId: number;
+					}>();
 
-				if (response.data.success) {
+				if (response.success) {
 					vscode.window.showInformationMessage(
 						"Successfully created diff",
 					);
@@ -129,12 +137,9 @@ export async function activate(context: vscode.ExtensionContext) {
 				const unstagedPatch = `${currentDir[0].uri.fsPath}/unstaged.patch`;
 
 				try {
-					const { data: retrievedChanges } = await got
+					const retrievedChanges = await got
 						.get(
-							"http://localhost:4000/change" +
-								new URLSearchParams({
-									projectId,
-								}),
+							`http://localhost:4000/change?projectId=${projectId}`,
 							{
 								headers: {
 									authorization:
@@ -144,12 +149,17 @@ export async function activate(context: vscode.ExtensionContext) {
 								},
 							},
 						)
-						.json();
-					if (!retrievedChanges.data.success) {
+						.json<{
+							success: boolean;
+							diff: string;
+							changeId: number;
+						}>();
+
+					if (!retrievedChanges.success) {
 						throw new Error();
 					}
 
-					const diff = JSON.parse(retrievedChanges.data.diff);
+					const diff = JSON.parse(retrievedChanges.diff);
 
 					await vscode.workspace.fs.writeFile(
 						vscode.Uri.file(stagedPatch),
@@ -196,6 +206,7 @@ export async function activate(context: vscode.ExtensionContext) {
 						"Success. Patch file created and applied",
 					);
 				} catch (error) {
+					console.log(error);
 					vscode.window.showErrorMessage("Error, try again");
 				}
 			},
@@ -220,11 +231,35 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			"codesync.createNewProject",
+			async ({ projectName, updateWebview }) => {
+				const response = await got
+					.post("http://localhost:4000/project", {
+						headers: {
+							authorization: context.workspaceState.get<string>(
+								"codesync.accessToken",
+							),
+						},
+						json: { projectName },
+					})
+					.json<{
+						success: boolean;
+						projectId: number;
+					}>();
+				if (response.success) {
+					await updateWebview();
+				}
+			},
+		),
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			"codesync.refreshAuth",
 			async ({ updateWebview }) => {
-				const _accessToken = context.workspaceState.get<string>(
-					"codesync.accessToken",
-				);
+				// const accessToken = context.workspaceState.get<string>(
+				// 	"codesync.accessToken",
+				// );
 				console.log("workspace keys", context.workspaceState.keys());
 
 				const refreshToken = context.workspaceState.get<string>(
