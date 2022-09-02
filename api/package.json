@@ -2,7 +2,7 @@
 	"name": "codesync-api",
 	"private": "true",
 	"scripts": {
-		"build": "tsc --project ./",
+		"build": "prisma generate && tsc --project ./",
 		"build:watch": "tsc --watch --project ./",
 		"db:gen": "prisma generate",
 		"db:push": "prisma db push",

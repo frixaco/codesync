@@ -2,6 +2,7 @@
 	"name": "codesync-monorepo",
 	"scripts": {
 		"dev": "pnpm -r --parallel run dev",
+		"build": "pnpm -r --parallel run build",
 		"lint": "pnpm -r --parallel run lint",
 		"prepare": "husky install",
 		"prettier": "pnpm -r --parallel run prettier",

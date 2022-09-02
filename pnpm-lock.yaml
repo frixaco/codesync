@@ -67,7 +67,7 @@ importers:
       glob: ^7.2.3
       got: 11.x
       mocha: ^10.0.0
-      vsce: ^2.11.0
+      vsce: ~2.11.0
     dependencies:
       '@vscode/webview-ui-toolkit': 1.0.1_react@18.2.0
       got: 11.8.5
@@ -1519,7 +1519,7 @@ packages:
       domhandler: 5.0.3
       domutils: 3.0.1
       htmlparser2: 8.0.1
-      parse5: 7.0.0
+      parse5: 7.1.0
       parse5-htmlparser2-tree-adapter: 7.0.0
     dev: false
 
@@ -1626,7 +1626,7 @@ packages:
     dev: false
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /consola/2.15.3:
     resolution: {integrity: sha512-9vAdYbHj6x2fLKC4+oPH0kFzY/orMZyG2Aj+kNylHxKGJ/Ed4dpNyAQYwJOdqO4zdM7XpVHmyejQDcQHrnuXbw==}
@@ -3768,11 +3768,11 @@ packages:
     resolution: {integrity: sha512-B77tOZrqqfUfnVcOrUvfdLbz4pu4RopLD/4vmu3HUPswwTA8OH0EMW9BlWR2B0RCoiZRAHEUu7IxeP1Pd1UU+g==}
     dependencies:
       domhandler: 5.0.3
-      parse5: 7.0.0
+      parse5: 7.1.0
     dev: false
 
-  /parse5/7.0.0:
-    resolution: {integrity: sha512-y/t8IXSPWTuRZqXc0ajH/UwDj4mnqLEbSttNbThcFhGrZuOyoyvNBO85PBp2jQa55wY9d07PBNjsK8ZP3K5U6g==}
+  /parse5/7.1.0:
+    resolution: {integrity: sha512-jo4pIv8LVI1IO2QxismoCv/+qZC6V3VSxOHqEQIpm5kDSzJNLNIVUwdStdUnezexjwdZXgYkxP5nanlZgfcCHg==}
     dependencies:
       entities: 4.4.0
     dev: false

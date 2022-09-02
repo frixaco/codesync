@@ -17,10 +17,8 @@
 		"build:watch": "tsc --watch --project tsconfig.json",
 		"dev": "tsc --watch --project tsconfig.json",
 		"lint": "eslint .",
-		"package": "vsce package --no-dependencies",
-		"esbuild": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
 		"prettier": "prettier --write --loglevel warn .",
-		"vscode:prepublish": "pnpm build && npm run esbuild -- --minify"
+		"vscode:prepublish": "pnpm build"
 	},
 	"contributes": {
 		"commands": [
@@ -47,7 +45,7 @@
 				{
 					"id": "codesync-sidepanel-view",
 					"title": "Codesync",
-					"icon": "../assets/logo.svg"
+					"icon": "./assets/logo.svg"
 				}
 			]
 		}
@@ -73,6 +71,6 @@
 	"dependencies": {
 		"@vscode/webview-ui-toolkit": "^1.0.1",
 		"got": "11.x",
-		"vsce": "^2.11.0"
+		"vsce": "~2.11.0"
 	}
 }

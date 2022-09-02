@@ -149,24 +149,30 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
 		const mainScriptUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(
-				this._extensionUri,
-				"..",
-				"ui",
-				"dist",
-				"index.js",
-			),
+			vscode.Uri.joinPath(this._extensionUri, "src", "ui", "index.js"),
 		);
+		// const mainScriptUri = webview.asWebviewUri(
+		// 	vscode.Uri.joinPath(
+		// 		this._extensionUri,
+		// 		"..",
+		// 		"ui",
+		// 		"dist",
+		// 		"index.js",
+		// 	),
+		// );
 
 		const stylesUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(
-				this._extensionUri,
-				"..",
-				"ui",
-				"dist",
-				"index.css",
-			),
+			vscode.Uri.joinPath(this._extensionUri, "src", "ui", "index.css"),
 		);
+		// const stylesUri = webview.asWebviewUri(
+		// 	vscode.Uri.joinPath(
+		// 		this._extensionUri,
+		// 		"..",
+		// 		"ui",
+		// 		"dist",
+		// 		"index.css",
+		// 	),
+		// );
 
 		const nonce = getNonce();
 
