@@ -7,7 +7,7 @@ module.exports = {
         node: true,
     },
     root: true,
-    ignorePatterns: ["node_modules", "dist", "build"],
+    ignorePatterns: ["node_modules", "dist", "build", "out"],
     overrides: [
         {
             files: ["*.js", "*.jsx", "*.ts", "*.tsx"],
