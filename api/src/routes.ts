@@ -279,15 +279,23 @@ export async function privateRoutes(
 					where: {
 						id: projectId,
 					},
+					include: {
+						change: true,
+					},
 				});
 				if (!project) {
-					reply.send({
+					return {
 						success: false,
 						statusCode: 500,
 						errorMessage: "Project not found",
-					});
-					return;
+					};
 				}
+
+				await prismaDb.change.deleteMany({
+					where: {
+						id: project.change?.id,
+					},
+				});
 
 				const newChange = await prismaDb.change.create({
 					data: {
@@ -305,17 +313,17 @@ export async function privateRoutes(
 					},
 				});
 
-				reply.send({
+				return {
 					success: true,
 					changeId: newChange.id,
 					projectId,
-				});
+				};
 			} catch (error) {
-				reply.send({
+				return {
 					success: false,
 					statusCode: 500,
-					errorMessage: "Failed to save project diff",
-				});
+					errorMessage: "Couldn't save project diff",
+				};
 			}
 		},
 	);

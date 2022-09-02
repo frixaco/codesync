@@ -34,76 +34,82 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand(
 			"codesync.sendChanges",
 			async ({ projectId }) => {
-				const git = await getGitAPI();
-				const repositories = git?.repositories || [];
-				// TODO: should pick correct repo if multiple are open
-				if (!repositories || !repositories[0]) {
-					vscode.window.showErrorMessage(
-						"Failed to detect repository.",
-					);
-					return;
-				}
+				try {
+					const git = await getGitAPI();
+					const repositories = git?.repositories || [];
+					// TODO: should pick correct repo if multiple are open
+					if (!repositories || !repositories[0]) {
+						vscode.window.showErrorMessage(
+							"Failed to detect repository.",
+						);
+						return;
+					}
 
-				if (
-					!vscode.workspace.workspaceFolders ||
-					!vscode.workspace.workspaceFolders[0]
-				) {
-					vscode.window.showErrorMessage(
-						"Failed to detect workspace folder.",
-					);
-					return;
-				}
+					if (
+						!vscode.workspace.workspaceFolders ||
+						!vscode.workspace.workspaceFolders[0]
+					) {
+						vscode.window.showErrorMessage(
+							"Failed to detect workspace folder.",
+						);
+						return;
+					}
 
-				const repo = await git?.init(repositories[0].rootUri);
-				// TODO: Try to remove dependency on Bash commands
-				const cmd_add_to_index = `git status --porcelain | sed -r 's/^.{3}//' | while read line; do git add -N $line; done`;
-				const cwd = vscode.workspace.workspaceFolders[0].uri.fsPath;
+					const repo = await git?.init(repositories[0].rootUri);
+					// TODO: Try to remove dependency on Bash commands
+					const cmd_add_to_index = `git status --porcelain | sed -r 's/^.{3}//' | while read line; do git add -N $line; done`;
+					const cwd = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
-				child_process.exec(
-					cmd_add_to_index,
-					{
-						cwd,
-					},
-					(error, _stdout, _stderr) => {
-						if (error) {
-							vscode.window.showErrorMessage(
-								"Failed to add to index.",
-								error.message,
-							);
-						}
-					},
-				);
-
-				const diff = {
-					unstaged: "",
-					staged: "",
-				};
-				diff.staged = (await repo?.diff(true)) || "";
-				diff.unstaged = (await repo?.diff()) || "";
-
-				const response = await got
-					.post("http://localhost:4000/change", {
-						headers: {
-							authorization: context.workspaceState.get<string>(
-								"codesync.accessToken",
-							),
+					child_process.exec(
+						cmd_add_to_index,
+						{
+							cwd,
 						},
-						json: {
-							diff: JSON.stringify(diff),
-							projectId,
+						(error, _stdout, _stderr) => {
+							if (error) {
+								vscode.window.showErrorMessage(
+									"Failed to add to index.",
+									error.message,
+								);
+							}
 						},
-					})
-					.json<{
-						success: boolean;
-						changeId: number;
-						projectId: number;
-					}>();
-
-				if (response.success) {
-					vscode.window.showInformationMessage(
-						"Successfully created diff",
 					);
-				} else {
+
+					const diff = {
+						unstaged: "",
+						staged: "",
+					};
+					diff.staged = (await repo?.diff(true)) || "";
+					diff.unstaged = (await repo?.diff()) || "";
+
+					const response = await got
+						.post("http://localhost:4000/change", {
+							headers: {
+								authorization:
+									context.workspaceState.get<string>(
+										"codesync.accessToken",
+									),
+							},
+							json: {
+								diff: JSON.stringify(diff),
+								projectId,
+							},
+						})
+						.json<{
+							success: boolean;
+							changeId: number;
+							projectId: number;
+						}>();
+
+					if (response.success) {
+						vscode.window.showInformationMessage(
+							"Successfully created diff",
+						);
+					} else {
+						vscode.window.showErrorMessage("Error, try again");
+					}
+				} catch (error) {
+					console.log(error);
 					vscode.window.showErrorMessage("Error, try again");
 				}
 			},
@@ -114,29 +120,29 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand(
 			"codesync.applyChanges",
 			async ({ projectId }) => {
-				const git = await getGitAPI();
-				const repositories = git?.repositories || [];
-				// TODO: should pick correct repo if multiple are open
-				if (!repositories || !repositories[0]) {
-					vscode.window.showErrorMessage(
-						"Failed to detect repository.",
-					);
-					return;
-				}
-
-				const repo = await git?.init(repositories[0].rootUri);
-
-				const currentDir = vscode.workspace.workspaceFolders;
-				if (!currentDir || !currentDir[0]) {
-					vscode.window.showErrorMessage(
-						"Failed to detect workspace folder.",
-					);
-					return;
-				}
-				const stagedPatch = `${currentDir[0].uri.fsPath}/staged.patch`;
-				const unstagedPatch = `${currentDir[0].uri.fsPath}/unstaged.patch`;
-
 				try {
+					const git = await getGitAPI();
+					const repositories = git?.repositories || [];
+					// TODO: should pick correct repo if multiple are open
+					if (!repositories || !repositories[0]) {
+						vscode.window.showErrorMessage(
+							"Failed to detect repository.",
+						);
+						return;
+					}
+
+					const repo = await git?.init(repositories[0].rootUri);
+
+					const currentDir = vscode.workspace.workspaceFolders;
+					if (!currentDir || !currentDir[0]) {
+						vscode.window.showErrorMessage(
+							"Failed to detect workspace folder.",
+						);
+						return;
+					}
+					const stagedPatch = `${currentDir[0].uri.fsPath}/staged.patch`;
+					const unstagedPatch = `${currentDir[0].uri.fsPath}/unstaged.patch`;
+
 					const retrievedChanges = await got
 						.get(
 							`http://localhost:4000/change?projectId=${projectId}`,
@@ -166,31 +172,24 @@ export async function activate(context: vscode.ExtensionContext) {
 						Buffer.from(diff.staged),
 					);
 
+					await repo?.apply(stagedPatch);
+
+					const cmd_stage = `git add -A && git reset -- staged.patch`;
+					const cwd = currentDir[0].uri.fsPath;
+
+					try {
+						child_process.exec(cmd_stage, {
+							cwd,
+						});
+					} catch (error) {
+						vscode.window.showWarningMessage(
+							"Failed to stage changes from staged.patch",
+						);
+					}
+
 					await vscode.workspace.fs.writeFile(
 						vscode.Uri.file(unstagedPatch),
 						Buffer.from(diff.unstaged),
-					);
-
-					await repo?.apply(stagedPatch);
-
-					const cmd_stage = `git add -A && git reset -- *.patch`;
-					const cwd = currentDir[0].uri.fsPath;
-
-					child_process.exec(
-						cmd_stage,
-						{
-							cwd,
-						},
-						(error, _stdout, _stderr) => {
-							// TODO: move `| sed -r 's/^.{3}//' | while read line; do git add -N $line; done`
-							// to here, to remove dependency on bash commands
-							if (error) {
-								vscode.window.showErrorMessage(
-									"Failed to staged.",
-									error.message,
-								);
-							}
-						},
 					);
 
 					await repo?.apply(unstagedPatch);
@@ -207,7 +206,9 @@ export async function activate(context: vscode.ExtensionContext) {
 					);
 				} catch (error) {
 					console.log(error);
-					vscode.window.showErrorMessage("Error, try again");
+					vscode.window.showErrorMessage(
+						"There has been some issues fetching and applying diffs",
+					);
 				}
 			},
 		),
