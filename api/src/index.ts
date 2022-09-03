@@ -92,7 +92,9 @@ app.register(
 
 app.register(import("@fastify/auth"));
 app.after((err) => {
-	app.log.error(err);
+	if (err) {
+		app.log.error(err);
+	}
 });
 app.register(fp(privateRoutes));
 

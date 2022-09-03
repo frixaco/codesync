@@ -1,7 +1,7 @@
+import presetUno from "@unocss/preset-uno";
+import Unocss from "unocss/vite";
 import { defineConfig } from "vite";
 import solidPlugin from "vite-plugin-solid";
-import Unocss from "unocss/vite";
-import presetUno from "@unocss/preset-uno";
 
 export default defineConfig({
 	plugins: [
@@ -20,6 +20,7 @@ export default defineConfig({
 		port: 3000,
 	},
 	build: {
+		outDir: "../extension/ui",
 		target: "esnext",
 		rollupOptions: {
 			output: {

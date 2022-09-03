@@ -255,6 +255,19 @@ export async function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
+		vscode.commands.registerCommand("codesync.deleteAuthKeys", async () => {
+			await context.workspaceState.update(
+				"codesync.accessToken",
+				undefined,
+			);
+			await context.workspaceState.update(
+				"codesync.refreshToken",
+				undefined,
+			);
+		}),
+	);
+
+	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			"codesync.refreshAuth",
 			async ({ updateWebview }) => {

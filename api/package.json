@@ -2,11 +2,10 @@
 	"name": "codesync-api",
 	"private": "true",
 	"scripts": {
-		"build": "prisma generate && tsc --project ./",
-		"build:watch": "tsc --watch --project ./",
+		"build": "pnpm db:gen && tsc --project tsconfig.json",
 		"db:gen": "prisma generate",
 		"db:push": "prisma db push",
-		"dev": "tsnd --respawn --exit-child --files src/index.ts",
+		"dev": "pnpm db:gen && tsnd --respawn --exit-child --files src/index.ts",
 		"lint": "eslint .",
 		"prettier": "prettier --write --loglevel warn ."
 	},

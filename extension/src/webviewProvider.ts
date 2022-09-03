@@ -134,6 +134,12 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 					);
 					break;
 				}
+				case "deleteAuthKeys": {
+					await vscode.commands.executeCommand(
+						"codesync.deleteAuthKeys",
+					);
+					break;
+				}
 				default:
 					throw new Error("Unknown postMessage type");
 					break;
@@ -149,7 +155,7 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
 		const mainScriptUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(this._extensionUri, "src", "ui", "index.js"),
+			vscode.Uri.joinPath(this._extensionUri, "ui", "index.js"),
 		);
 		// const mainScriptUri = webview.asWebviewUri(
 		// 	vscode.Uri.joinPath(
@@ -162,7 +168,7 @@ export class CodesyncWebviewProvider implements vscode.WebviewViewProvider {
 		// );
 
 		const stylesUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(this._extensionUri, "src", "ui", "index.css"),
+			vscode.Uri.joinPath(this._extensionUri, "ui", "index.css"),
 		);
 		// const stylesUri = webview.asWebviewUri(
 		// 	vscode.Uri.joinPath(

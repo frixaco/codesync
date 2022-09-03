@@ -4,6 +4,7 @@ Thumbs.db
 node_modules/
 out/
 dist/
+extension/ui/
 .vs/
 tsconfig.lsif.json
 *.lsif

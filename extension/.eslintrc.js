@@ -3,5 +3,5 @@
  */
 module.exports = {
 	extends: ["../.eslintrc.js"],
-	ignorePatterns: ["dist", "out", "build", "ui"],
+	ignorePatterns: ["ui"],
 };

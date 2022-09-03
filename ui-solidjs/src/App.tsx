@@ -108,69 +108,81 @@ function App() {
 	});
 
 	return (
-		<Show
-			when={auth().isAuth}
-			fallback={
-				<div class="h-96 flex flex-col items-center justify-items-center my-12">
-					<a
-						class={`bg-vsgreen ${btn} py-2 px-6 hover:text-white`}
-						href={
-							"http://localhost:4000/login/oauth/github/authorize"
-						}
-					>
-						LOGIN WITH GITHUB
-					</a>
-				</div>
-			}
-		>
-			<div class="flex flex-col my-1">
-				{targetProject() && (
-					<div>
-						<div class="flex justify-between mt-2">
-							<span class="font-bold">
-								Project:{" "}
-								{`${targetProject()?.name} (${
-									targetProject()?.id
-								})`}
-							</span>
-						</div>
-
-						<div class="flex flex-col mt-3 justify-center items-stretch gap-2">
-							<button
-								class={`bg-vsgreen ${btn} py-2 px-6`}
-								onClick={() =>
-									onSend({
-										projectId: targetProject()
-											?.id as number,
-									})
-								}
-							>
-								PUSH CHANGES TO SERVER
-							</button>
-
-							<button
-								title="Fetch changes for this "
-								class={`bg-vsblue ${btn} py-2 px-4`}
-								onClick={() => {
-									onReceive({
-										projectId: targetProject()
-											?.id as number,
-									});
-								}}
-							>
-								FETCH CHANGES AND APPLY
-							</button>
-						</div>
+		<>
+			<Show
+				when={auth().isAuth}
+				fallback={
+					<div class="h-96 flex flex-col items-center justify-items-center my-12">
+						<a
+							class={`bg-vsgreen ${btn} py-2 px-6 hover:text-white`}
+							href={
+								"http://localhost:4000/login/oauth/github/authorize"
+							}
+						>
+							LOGIN WITH GITHUB
+						</a>
 					</div>
-				)}
+				}
+			>
+				<div class="flex flex-col my-1">
+					{targetProject() && (
+						<div>
+							<div class="flex justify-between mt-2">
+								<span class="font-bold">
+									Project:{" "}
+									{`${targetProject()?.name} (${
+										targetProject()?.id
+									})`}
+								</span>
+							</div>
 
-				<div>
-					<p class="font-bold mt-4 mb-0">PROJECTS</p>
+							<div class="flex flex-col mt-3 justify-center items-stretch gap-2">
+								<button
+									class={`bg-vsgreen ${btn} py-2 px-6`}
+									onClick={() =>
+										onSend({
+											projectId: targetProject()
+												?.id as number,
+										})
+									}
+								>
+									PUSH CHANGES TO SERVER
+								</button>
 
-					<Projects onChoose={onChooseProject} />
+								<button
+									title="Fetch changes for this "
+									class={`bg-vsblue ${btn} py-2 px-4`}
+									onClick={() => {
+										onReceive({
+											projectId: targetProject()
+												?.id as number,
+										});
+									}}
+								>
+									FETCH CHANGES AND APPLY
+								</button>
+							</div>
+						</div>
+					)}
+
+					<div>
+						<p class="font-bold mt-4 mb-0">PROJECTS</p>
+
+						<Projects onChoose={onChooseProject} />
+					</div>
 				</div>
-			</div>
-		</Show>
+			</Show>
+
+			<button
+				onClick={() =>
+					vscodeApi.postMessage({
+						type: "deleteAuthKeys",
+					})
+				}
+			>
+				Reset stored auth keys
+			</button>
+		</>
 	);
 }
 

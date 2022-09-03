@@ -7,8 +7,9 @@
 		"prepare": "husky install",
 		"prettier": "pnpm -r --parallel run prettier",
 		"api": "pnpm --filter codesync-api dev",
-		"ui": "pnpm --filter codesync-ui dev",
-		"extension": "pnpm --filter codesync-extension dev"
+		"ui": "pnpm --filter codesync-ui-solidjs dev",
+		"extension": "pnpm --filter codesync-extension dev",
+		"package": "pnpm --filter codesync-extension package"
 	},
 	"devDependencies": {
 		"@types/node": "^16.11.7",
