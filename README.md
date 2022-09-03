@@ -12,7 +12,7 @@ So I deciced to make this extension which will, hopefully, solve this problem of
 -   Create `.env` file in `api/` folder. Example: [.env.example](./api/.env.example)
 -   `pnpm install` (or run `./clean-install.sh` for clean install)
 -   `pnpm dev` to run everything in dev mode
--   Open [extension.ts](./extension/src/extension.ts) and press `F5`
+-   Press `F5` to start working with the extension
 
 ## Features
 

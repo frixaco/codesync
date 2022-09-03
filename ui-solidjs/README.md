@@ -1,3 +1,4 @@
-## Extension UI written in SolidJS
+## UI (VSCode Webview View)
 
--   SolidJS
+-   SolidJS 🚀: https://github.com/solidjs/solid
+-   unocss: https://github.com/unocss/unocss
