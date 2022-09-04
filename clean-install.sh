@@ -1,6 +1,8 @@
-rm -rf dist node_modules pnpm-lock.yaml
-rm -rf extension/dist extension/ui extension/node_modules extension/pnpm-lock.yaml
-rm -rf api/dist api/node_modules api/pnpm-lock.yaml
-rm -rf ui-solidjs/node_modules ui-solidjs/pnpm-lock.yaml
+rm -rf `find . -type d -name node_modules`
+rm -rf `find . -type d -name dist`
+rm -rf `find . -type d -name out`
+
+rm -rf `find . -type d -name ui`
+find . -type f -name pnpm-lock.yaml -delete
 
 pnpm install

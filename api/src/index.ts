@@ -15,11 +15,7 @@ import { GithubUser } from "./types";
 dotenv.config();
 
 const app = fastify({
-	logger: {
-		transport: {
-			target: "pino-pretty",
-		},
-	},
+	logger: true,
 });
 app.decorateRequest("user", {} as GithubUser);
 
@@ -102,8 +98,10 @@ const PORT = Number(process.env.PORT) || 4000;
 
 const start = async () => {
 	try {
+		await prismaDb.$connect();
 		await app.listen({ port: PORT });
 		console.log(`Server is up on PORT ${PORT}`);
+		console.log(`MySQL database is up`);
 	} catch (err) {
 		app.log.error(err);
 		process.exit(1);

@@ -1,20 +1,21 @@
 {
 	"name": "codesync-monorepo",
+	"version": "0.0.1",
 	"scripts": {
-		"dev": "pnpm -r --parallel run dev",
 		"build": "pnpm -r --parallel run build",
-		"lint": "pnpm -r --parallel run lint",
-		"prepare": "husky install",
-		"prettier": "pnpm -r --parallel run prettier",
+		"dev": "pnpm -r --parallel run dev",
 		"api": "pnpm --filter codesync-api dev",
 		"ui": "pnpm --filter codesync-ui-solidjs dev",
 		"extension": "pnpm --filter codesync-extension dev",
-		"package": "pnpm --filter codesync-extension package"
+		"lint": "eslint .",
+		"prettier": "prettier --write .",
+		"prepare": "husky install"
 	},
 	"devDependencies": {
 		"@types/node": "^16.11.7",
 		"@typescript-eslint/eslint-plugin": "^5.32.0",
 		"@typescript-eslint/parser": "^5.32.0",
+		"esbuild": "^0.15.7",
 		"eslint": "^8.21.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-solid": "^0.7.1",

@@ -13,12 +13,10 @@
 	"publisher": "frixaco",
 	"main": "./dist/extension.js",
 	"scripts": {
-		"build": "tsc --project tsconfig.json",
-		"dev": "tsc --watch --project tsconfig.json",
-		"lint": "eslint .",
+		"build": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
+		"dev": "pnpm build --watch",
 		"package": "vsce package --no-dependencies --out '../'",
-		"prettier": "prettier --write --loglevel warn .",
-		"vscode:prepublish": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify"
+		"vscode:prepublish": "pnpm bundle"
 	},
 	"contributes": {
 		"commands": [
@@ -56,14 +54,8 @@
 		"onCommand:codesync.sendChanges"
 	],
 	"devDependencies": {
-		"@types/glob": "^7.2.0",
-		"@types/mocha": "^9.1.1",
 		"@types/vscode": "^1.69.1",
-		"@types/vscode-webview": "^1.57.0",
-		"@vscode/test-electron": "^2.1.5",
-		"esbuild": "^0.15.6",
-		"glob": "^7.2.3",
-		"mocha": "^10.0.0"
+		"@types/vscode-webview": "^1.57.0"
 	},
 	"engines": {
 		"vscode": "^1.69.1"

@@ -1,1 +1,4 @@
 dist
+out
+build
+pnpm-lock.yaml

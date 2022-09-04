@@ -1,11 +1,10 @@
 {
 	"name": "codesync-ui-solidjs",
 	"private": "true",
+	"version": "0.0.1",
 	"scripts": {
 		"build": "vite build --emptyOutDir",
 		"dev": "vite build --watch --emptyOutDir",
-		"lint": "eslint .",
-		"prettier": "prettier --write --loglevel warn .",
 		"serve": "vite preview"
 	},
 	"dependencies": {
