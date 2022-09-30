@@ -7,6 +7,8 @@ Currently, I work both on my laptop and PC and regularly switch between them (sw
 
 So I deciced to make this extension which will, hopefully, solve this problem of mine.
 
+[TODO](./TODO.md)
+
 ## Local developement
 
 -   Create `.env` file in `api/` folder. Example: [.env.example](./api/.env.example)

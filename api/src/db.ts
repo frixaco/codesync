@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 
-const prismaDb = new PrismaClient();
+const prismaDb = new PrismaClient({
+	log: ["info", "query", "error", "warn"],
+});
 
 /**
  * Exclude keys from user
