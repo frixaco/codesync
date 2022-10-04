@@ -60,20 +60,9 @@ export async function activate(context: vscode.ExtensionContext) {
 					const cmd_add_to_index = `git status --porcelain | sed -r 's/^.{3}//' | while read line; do git add -N $line; done`;
 					const cwd = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
-					child_process.exec(
-						cmd_add_to_index,
-						{
-							cwd,
-						},
-						(error, _stdout, _stderr) => {
-							if (error) {
-								vscode.window.showErrorMessage(
-									"Failed to add to index.",
-									error.message,
-								);
-							}
-						},
-					);
+					child_process.execSync(cmd_add_to_index, {
+						cwd,
+					});
 
 					const diff = {
 						unstaged: "",
@@ -178,7 +167,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					const cwd = currentDir[0].uri.fsPath;
 
 					try {
-						child_process.exec(cmd_stage, {
+						child_process.execSync(cmd_stage, {
 							cwd,
 						});
 					} catch (error) {
@@ -193,13 +182,6 @@ export async function activate(context: vscode.ExtensionContext) {
 					);
 
 					await repo?.apply(unstagedPatch);
-
-					await vscode.workspace.fs.delete(
-						vscode.Uri.file(stagedPatch),
-					);
-					await vscode.workspace.fs.delete(
-						vscode.Uri.file(unstagedPatch),
-					);
 
 					vscode.window.showInformationMessage(
 						"Success. Patch file created and applied",
@@ -271,10 +253,14 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand(
 			"codesync.refreshAuth",
 			async ({ updateWebview }) => {
-				// const accessToken = context.workspaceState.get<string>(
-				// 	"codesync.accessToken",
-				// );
-				console.log("workspace keys", context.workspaceState.keys());
+				console.log(
+					"accessToken",
+					context.workspaceState.get("codesync.accessToken"),
+				);
+				console.log(
+					"refreshToken",
+					context.workspaceState.get("codesync.refreshToken"),
+				);
 
 				const refreshToken = context.workspaceState.get<string>(
 					"codesync.refreshToken",
