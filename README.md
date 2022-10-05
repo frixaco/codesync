@@ -9,6 +9,11 @@ So I deciced to make this extension which will, hopefully, solve this problem of
 
 [TODO](./TODO.md)
 
+## Demo
+
+https://user-images.githubusercontent.com/37442533/193995535-3672ea71-0553-40c8-8862-8ea2e92914f3.mp4
+
+
 ## Local developement
 
 -   Create `.env` file in `api/` folder. Example: [.env.example](./api/.env.example)
