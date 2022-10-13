@@ -1,7 +1,6 @@
 {
 	"name": "codesync-extension",
 	"displayName": "Codesync",
-	"private": "true",
 	"version": "0.0.1",
 	"description": "Synchronize your code changes across your devices",
 	"categories": [
@@ -17,8 +16,9 @@
 		"build": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
 		"dev": "pnpm build --watch",
 		"package": "vsce package --no-dependencies --out '../'",
-		"publish": "vsce publish",
-		"vscode:prepublish": "pnpm build"
+		"vscode:login": "vsce login codesync-extension",
+		"vscode:prepublish": "pnpm build",
+		"vscode:publish": "vsce publish"
 	},
 	"contributes": {
 		"commands": [

@@ -1,0 +1,14 @@
+
+> codesync-extension@0.0.1 vscode:publish /Users/frixaco/projects/codesync-monorepo/extension
+> vsce publish
+
+Executing prepublish script 'npm run vscode:prepublish'...
+
+> codesync-extension@0.0.1 vscode:prepublish
+> pnpm build
+
+
+> codesync-extension@0.0.1 build /Users/frixaco/projects/codesync-monorepo/extension
+> esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify
+
+ ELIFECYCLE  Command failed with exit code 1.
