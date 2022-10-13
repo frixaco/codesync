@@ -1,9 +1,17 @@
 import { For } from "solid-js";
-import { btn, Project, projects, setTargetProject, targetProject } from "./App";
+import {
+	btn,
+	deleteTargetProject,
+	Project,
+	projects,
+	setTargetProject,
+	targetProject,
+} from "./App";
 
 interface ProjectProps {
 	onChoose: (chosenProject: Project) => void;
 }
+
 export function Projects(props: ProjectProps) {
 	const isChosen = (projectId: number) => projectId === targetProject()?.id;
 
@@ -35,6 +43,21 @@ export function Projects(props: ProjectProps) {
 							</span>
 
 							<div class="flex">
+								{isChosen(project.id) && (
+									<button
+										class={`mr-1 bg-vsblue ${btn} ${
+											isChosen(project.id) ? "op-80" : ""
+										}`}
+										onClick={async () =>
+											await deleteTargetProject(
+												project.id,
+											)
+										}
+									>
+										Delete
+									</button>
+								)}
+
 								<button
 									class={`mr-1 bg-vsgreen ${btn} ${
 										isChosen(project.id) ? "op-80" : ""

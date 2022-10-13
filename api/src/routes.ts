@@ -329,6 +329,60 @@ export async function privateRoutes(
 	);
 
 	/**
+	 * Delete project
+	 */
+	fastify.delete<{ Querystring: { projectId: string } }>(
+		"/project",
+		{
+			preHandler: fastify.auth([fastify.verifyUser]),
+		},
+		async function (request, reply) {
+			try {
+				const { projectId } = request.query;
+
+				const response = await prismaDb.project.delete({
+					where: {
+						id: +projectId,
+					},
+				});
+				console.log("project delete result", response);
+
+				console.log(
+					await prismaDb.project.findMany({
+						where: {
+							ownerId: request.user.id,
+						},
+					}),
+				);
+				console.log(
+					await prismaDb.change.findMany({
+						where: {
+							authorId: request.user.id,
+						},
+					}),
+				);
+				console.log(
+					await prismaDb.change.findMany({
+						where: {
+							authorId: request.user.id,
+						},
+					}),
+				);
+
+				reply.send({
+					success: true,
+				});
+			} catch (error) {
+				reply.send({
+					success: false,
+					statusCode: 500,
+					errorMessage: "Failed to delete project",
+				});
+			}
+		},
+	);
+
+	/**
 	 * Get project diff
 	 */
 	fastify.get<{ Querystring: { projectId: string } }>(

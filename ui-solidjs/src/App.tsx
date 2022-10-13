@@ -49,6 +49,25 @@ export const [projects, { mutate: mutateProjects, refetch: refetchProjects }] =
 		return [];
 	});
 
+export const deleteTargetProject = async (id: number) => {
+	if (auth().isAuth) {
+		await fetch(
+			"http://localhost:4000/project?" +
+				new URLSearchParams({
+					projectId: id.toString(),
+				}),
+			{
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+					"authorization": auth().accessToken,
+				},
+			},
+		);
+		mutateProjects((p) => p?.filter((i) => i.id !== id));
+	}
+};
+
 const onSend = ({ projectId }: { projectId: number }) => {
 	vscodeApi.postMessage({
 		type: "send",
