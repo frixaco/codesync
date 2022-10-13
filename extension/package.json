@@ -17,7 +17,8 @@
 		"build": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
 		"dev": "pnpm build --watch",
 		"package": "vsce package --no-dependencies --out '../'",
-		"vscode:prepublish": "pnpm bundle"
+		"publish": "vsce publish",
+		"vscode:prepublish": "pnpm build"
 	},
 	"contributes": {
 		"commands": [
