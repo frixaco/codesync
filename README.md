@@ -1,4 +1,4 @@
-# Codesync
+# Codesync (WIP)
 
 Synchronize your changes across devices. No need to commit, stash, copy-paste your changes when switching between devices (laptop, PC, tablet, etc.).
 
