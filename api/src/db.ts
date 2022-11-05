@@ -1,3 +1,9 @@
+import mysql from "mysql2";
+
+const db = mysql.createConnection(process.env.DATABASE_URL).promise();
+
+export { db };
+
 import { PrismaClient } from "@prisma/client";
 
 const prismaDb = new PrismaClient({

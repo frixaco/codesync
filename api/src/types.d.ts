@@ -69,3 +69,11 @@ interface GithubUser {
 	created_at: string;
 	updated_at: string;
 }
+
+// interface User extends RowDataPacket {
+// 	id: number;
+// 	githubId: number;
+// 	refreshToken: string;
+// 	createdAt: number;
+// 	updatedAt: number;
+// }

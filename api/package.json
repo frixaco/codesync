@@ -22,7 +22,8 @@
 		"dotenv": "^16.0.1",
 		"fastify": "^4.3.0",
 		"fastify-plugin": "^4.0.0",
-		"got": "11.x"
+		"got": "11.x",
+		"mysql2": "^2.3.3"
 	},
 	"devDependencies": {
 		"pkg": "^5.8.0",

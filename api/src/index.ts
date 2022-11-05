@@ -65,6 +65,12 @@ app.register(
 					return;
 				}
 
+				// const [user, _userFields] = await db.query<User[]>(
+				// 	"SELECT * FROM `user` WHERE `githubId` = ?",
+				// 	[githubUser.id],
+				// );
+				// console.log("select users by githubId", user);
+
 				const user = await prismaDb.user.findUnique({
 					where: {
 						githubId: githubUser.id,
@@ -98,17 +104,16 @@ const PORT = Number(process.env.PORT) || 4000;
 
 const start = async () => {
 	try {
-		await prismaDb.$connect();
+		// await prismaDb.$connect();
 		await app.listen({ port: PORT });
 		console.log(`Server is up on PORT ${PORT}`);
-		console.log(`MySQL database is up`);
 	} catch (err) {
 		app.log.error(err);
 		process.exit(1);
 	}
 };
 start().finally(async () => {
-	await prismaDb.$disconnect();
+	// await prismaDb.$disconnect();
 });
 
 // Generate JWT access token for Github App

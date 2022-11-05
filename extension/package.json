@@ -15,10 +15,9 @@
 	"scripts": {
 		"build": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
 		"dev": "pnpm build --watch",
-		"package": "vsce package --no-dependencies --out '../'",
-		"vscode:login": "vsce login codesync-extension",
+		"package": "vsce package --no-dependencies",
 		"vscode:prepublish": "pnpm build",
-		"vscode:publish": "vsce publish"
+		"vscode:publish": "vsce publish --no-dependencies"
 	},
 	"contributes": {
 		"commands": [
